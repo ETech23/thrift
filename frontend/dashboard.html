@@ -1,0 +1,40 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-12 col-md-8">
+                <div class="card p-4">
+                    <h2 class="text-center">Welcome, <span id="userName">John Doe</span></h2>
+                    <div class="mt-4">
+                        <h4>Your Listings</h4>
+                        <ul id="listingList" class="list-group">
+                            <!-- Dynamic listing items will be injected here -->
+                        </ul>
+                    </div>
+                    <div class="mt-4">
+                        <h4>Your Messages</h4>
+                        <div id="messageList">
+                            <!-- Dynamic message items will be injected here -->
+                        </div>
+                    </div>
+                    <button class="btn btn-danger mt-4 w-100" id="logoutButton">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Item - Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-mode">
+    <div class="container mt-5 p-4 bg-white shadow rounded form-container">
+        <h2 class="text-2xl font-bold text-primary text-center">Post Your Item</h2>
+
+        <form id="postItemForm" class="mt-4">
+            <!-- Item Name -->
+            <label class="form-label">Item Name</label>
+            <input type="text" id="itemName" class="form-control" placeholder="Enter item name" required>
+<!-- Location -->
+<div class="row mt-3">
+    <div class="col-12">
+        <label class="form-label">Location</label>
+        <input type="text" id="itemLocation" class="form-control" placeholder="Enter item location" required>
+    </div>
+</div>
+            <!-- Price -->
+            <div class="row">
+    <div class="col-4">
+        <label class="form-label mt-3">Currency</label>
+        <select id="itemCurrency" class="form-control">
+            <option value="NGN">₦ Naira (NGN)</option>
+            <option value="USD">$ US Dollar (USD)</option>
+            <option value="EUR">€ Euro (EUR)</option>
+            <option value="GBP">£ British Pound (GBP)</option>
+            <option value="KES">KSh Kenyan Shilling (KES)</option>
+            <option value="ZAR">R South African Rand (ZAR)</option>
+            <option value="AED">د.إ UAE Dirham (AED)</option>
+            <option value="GHS">₵ Ghanaian Cedi (GHS)</option>
+            <option value="XAF">CFA Central African Franc (XAF)</option>
+            <option value="XOF">CFA West African Franc (XOF)</option>
+        </select>
+    </div>
+    <div class="col-8">
+        <label class="form-label mt-3">Price</label>
+        <div class="input-group">
+            <span class="input-group-text" id="currencySymbol">₦</span>
+            <input type="number" id="itemPrice" class="form-control" placeholder="Enter price" required>
+        </div>
+    </div>
+</div>
+
+            <!-- Category -->
+            <label class="form-label mt-3">Category</label>
+            <select id="itemCategory" class="form-control">
+                <option value="">All Categories</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Furniture">Furniture</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Others">Others</option>
+            </select>
+
+            <!-- Upload Images -->
+            <label class="form-label mt-3">Upload Images</label>
+            <input type="file" id="itemImage" class="form-control" accept="image/*" required>
+            <img id="previewImage" class="img-thumbnail mt-3 d-none" width="150">
+
+            <!-- Anonymous Mode -->
+            <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" id="anonymousToggle">
+                <label class="form-check-label">Post Anonymously</label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary w-100 mt-4">Post Item</button>
+        </form>
+
+        <button id="darkModeToggle" class="btn btn-secondary mt-3">Toggle Dark Mode</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Used Items Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-mode">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-md">
+        <div class="container">
+            <a class="navbar-brand font-bold text-xl text-primary" href="#">Marketplace</a>
+            
+            <!-- Mobile Menu Button -->
+            <button id="menuToggle" class="navbar-toggler border-0 focus:outline-none">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Slide-in Menu -->
+            <div id="mobileMenu" class="mobile-menu">
+    <ul class="list-unstyled p-5">
+        <li class="my-2"><a href="dashboard.html" class="w-100">Dashboard</a></li>
+        <hr>
+        <li class="my-2"><a href="listings.html" class="nav-link">Browse Listings</a></li>
+        <hr>
+        <li class="my-2"><a href="post-item.html" class="nav-link">Sell Item</a></li>
+        <hr>
+        <li class="my-2"><a href="profile.html" class="w-100">Profile</a></li>
+        <hr>
+        <li class="my-2"><a href="register.html" class="w-100">Sign Up</a></li>
+        <hr>
+        <li><button id="darkModeToggle" class="btn btn-secondary w-100 mt-2">Dark Mode</button></li>
+    </ul>
+</div>
+        </div>
+    </nav>
+
+    <!-- Overlay for closing menu -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- Hero Section -->
+    <header class="bg-primary text-white text-center py-12">
+        <h1 class="text-4xl font-bold">Buy & Sell Used Items</h1>
+        <p class="mt-2 text-lg">List your items or find great deals near you.</p>
+        <div class="mt-4">
+            <input type="text" class="px-4 py-2 rounded shadow-lg w-1/2 text-gray-800" placeholder="Search items...">
+            <button class="bg-secondary text-white px-6 py-2 rounded shadow-lg ml-2">Search</button>
+        </div>
+    </header>
+    
+      <!-- Featured Listings -->
+    <section class="container mt-6">
+        <h2 class="text-2xl font-bold text-center mb-4">Featured Listings</h2>
+        <div class="row" id="featuredListings">
+            <!-- Items will be loaded dynamically -->
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
