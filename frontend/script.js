@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const BASE_URL = "https://your-marketplace-api.com/api";
+    const BASE_URL = "https://thrift2.vercel.app/api";
     const socket = io(BASE_URL);
 
     // Dark Mode Management
@@ -208,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    const BASE_URL = "https://your-marketplace-api.com/api";
+    const BASE_URL = "https://thrift2.vercel.app/api";
     const socket = io(BASE_URL);
 
    /** function setupDarkMode() {
@@ -230,18 +230,32 @@ document.addEventListener("DOMContentLoaded", () => {
 **/
 
 
-    function setupAuthForms() {
-        const registerForm = document.getElementById("registerForm");
-        const loginForm = document.getElementById("loginForm");
+    
 
-        if (registerForm) {
-            registerForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const formData = new FormData(registerForm);
+document.addEventListener("DOMContentLoaded", () => {
+    setupAuthForms();
+});
+
+function setupAuthForms() {
+    const registerForm = document.getElementById("registerForm");
+    const loginForm = document.getElementById("loginForm");
+
+    if (registerForm) {
+        registerForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(registerForm);
+            const formObject = Object.fromEntries(formData.entries());  // ✅ Fix: Convert FormData correctly
+
+            if (formObject.password !== formObject.confirmPassword) {  // ✅ Fix: Password confirmation check
+                alert("Passwords do not match!");
+                return;
+            }
+
+            try {
                 const response = await fetch(`${BASE_URL}/register`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(Object.fromEntries(formData))
+                    body: JSON.stringify(formObject)
                 });
 
                 const data = await response.json();
@@ -249,19 +263,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     alert("Registration successful! Please login.");
                     window.location.href = "login.html";
                 } else {
-                    alert(data.message);
+                    alert(data.message || "Registration failed.");
                 }
-            });
-        }
+            } catch (error) {
+                alert("Error connecting to the server.");
+                console.error(error);
+            }
+        });
+    }
 
-        if (loginForm) {
-            loginForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const formData = new FormData(loginForm);
+    if (loginForm) {
+        loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(loginForm);
+            const formObject = Object.fromEntries(formData.entries());  // ✅ Fix: Convert FormData correctly
+
+            try {
                 const response = await fetch(`${BASE_URL}/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(Object.fromEntries(formData))
+                    body: JSON.stringify(formObject)
                 });
 
                 const data = await response.json();
@@ -270,11 +291,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     localStorage.setItem("userId", data.user._id);
                     window.location.href = "dashboard.html";
                 } else {
-                    alert(data.message);
+                    alert(data.message || "Login failed.");
                 }
-            });
-        }
+            } catch (error) {
+                alert("Error connecting to the server.");
+                console.error(error);
+            }
+        });
     }
+}
 
     function setupUserDashboard() {
         const token = localStorage.getItem("token");
@@ -424,7 +449,7 @@ recordButton.addEventListener("mouseup", () => {
     setupRealTimeChat();
 });
 
-const BASE_URL = "https://your-marketplace-api.com/api";
+const BASE_URL = "https://thrift2.vercel.app/api";
     const socket = io(BASE_URL);
 
 function updateUnreadCount() {
