@@ -45,6 +45,11 @@ body.dark-mode .btn-secondary {
     background-color: #d88b4d;
 }
 
+.status {
+    font-size: 12px;
+    color: gray;
+    margin-left: 5px;
+}
 /* Marketplace-style grid layout */
 #featuredListings {
     justify-content: center; /* Horizontally center the grid */

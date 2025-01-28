@@ -1,14 +1,10 @@
-
-
 document.addEventListener("DOMContentLoaded", () => {
-    // Global Configuration
     const BASE_URL = "https://your-marketplace-api.com/api";
-    
+    const socket = io(BASE_URL);
+
     // Dark Mode Management
     function setupDarkMode() {
         const darkModeToggle = document.getElementById("darkModeToggle");
-        
-        // Initial dark mode check
         if (localStorage.getItem("darkMode") === "enabled") {
             document.body.classList.add("dark-mode");
         }
@@ -16,12 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (darkModeToggle) {
             darkModeToggle.addEventListener("click", () => {
                 document.body.classList.toggle("dark-mode");
-
-                if (document.body.classList.contains("dark-mode")) {
-                    localStorage.setItem("darkMode", "enabled");
-                } else {
-                    localStorage.removeItem("darkMode");
-                }
+                localStorage.setItem("darkMode", document.body.classList.contains("dark-mode") ? "enabled" : "disabled");
             });
         }
     }
@@ -38,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (overlay) overlay.classList.toggle("active");
             });
 
-            // Close menu when clicking outside
             if (overlay) {
                 overlay.addEventListener("click", () => {
                     mobileMenu.classList.remove("active");
@@ -48,179 +38,125 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Featured Listings Management
+    // Fetch Featured Listings from Backend
     function setupFeaturedListings() {
         const featuredListings = document.getElementById("featuredListings");
 
-        if (featuredListings) {
-            const sampleItems = [
-                { 
-                    name: "iPhone 12", 
-                    price: "$500", 
-                    image: "img/i.jpeg", 
-                    anonymous: false 
-                },
-                { 
-                    name: "Gaming Laptop", 
-                    price: "$900", 
-                    image: "img/laptop.jpeg", 
-                    anonymous: true 
-                },
-            { 
-                    name: "iPhone 12", 
-                    price: "$500", 
-                    image: "img/i.jpeg", 
-                    anonymous: false 
-                },
-                { 
-                    name: "Gaming Laptop", 
-                    price: "$900", 
-                    image: "img/laptop.jpeg", 
-                    anonymous: true 
-                },
-            ];
-
-            sampleItems.forEach(item => {
-                const card = document.createElement("div");
-                card.className = "col-md-4 mb-4";
-                card.innerHTML = `
-                    <div class="card">
-                        <img src="${item.image}" class="card-img-top" alt="${item.name}">
-                        <div class="card-body">
-                            <h5 class="card-title">${item.name}</h5>
-                            <p class="text-muted">${item.price}</p>
-                            <p class="text-sm ${item.anonymous ? 'text-danger' : 'text-muted'}">
-                                ${item.anonymous ? 'Anonymous' : 'Verified Seller'}
-                            </p>
-                            <a href="item-details.html" class="btn btn-primary w-100">View Item</a>
+        fetch(`${BASE_URL}/items?limit=4`)
+            .then(response => response.json())
+            .then(data => {
+                featuredListings.innerHTML = "";
+                data.items.forEach(item => {
+                    const card = document.createElement("div");
+                    card.className = "col-md-4 mb-4";
+                    card.innerHTML = `
+                        <div class="card">
+                            <img src="${item.imageUrl}" class="card-img-top" alt="${item.name}">
+                            <div class="card-body">
+                                <h5 class="card-title">${item.name}</h5>
+                                <p class="text-muted">${item.price} ${item.currency || ''}</p>
+                                <p class="text-sm ${item.anonymous ? 'text-danger' : 'text-muted'}">
+                                    ${item.anonymous ? 'Anonymous' : 'Verified Seller'}
+                                </p>
+                                <a href="item-details.html?id=${item._id}" class="btn btn-primary w-100">View Item</a>
+                            </div>
                         </div>
-                    </div>
-                `;
-                featuredListings.appendChild(card);
-            });
-        }
+                    `;
+                    featuredListings.appendChild(card);
+                });
+            })
+            .catch(error => console.error("Error fetching items:", error));
     }
 
-    // Item Posting Form Management
+    // Item Posting Form
     function setupItemPostForm() {
         const postItemForm = document.getElementById("postItemForm");
 
         if (postItemForm) {
-            const itemImage = document.getElementById("itemImage");
-            const previewImage = document.getElementById("previewImage");
-            const anonymousToggle = document.getElementById("anonymousToggle");
-
-            // Image Upload Preview
-            itemImage.addEventListener("change", (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        previewImage.src = e.target.result;
-                        previewImage.classList.remove("d-none");
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            // Form Submission
-            postItemForm.addEventListener("submit", (event) => {
+            postItemForm.addEventListener("submit", async (event) => {
                 event.preventDefault();
 
-                const itemData = {
-                    name: document.getElementById("itemName").value,
-                    price: document.getElementById("itemPrice").value,
-                    category: document.getElementById("itemCategory").value,
-                    anonymous: anonymousToggle.checked,
-                    image: previewImage.src
-                };
+                const formData = new FormData();
+                formData.append("name", document.getElementById("itemName").value);
+                formData.append("price", document.getElementById("itemPrice").value);
+                formData.append("category", document.getElementById("itemCategory").value);
+                formData.append("location", document.getElementById("itemLocation").value);
+                formData.append("currency", document.getElementById("itemCurrency").value);
+                formData.append("anonymous", document.getElementById("anonymousToggle").checked);
+                formData.append("image", document.getElementById("itemImage").files[0]);
 
-                // Sending data to backend
-                fetch(`${BASE_URL}/items/create`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(itemData)
-                })
-                .then(response => response.json())
-                .then(result => {
+                try {
+                    const response = await fetch(`${BASE_URL}/items/create`, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${localStorage.getItem("token")}`
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
                     if (result.success) {
                         showNotification("Item posted successfully!", "success");
                         postItemForm.reset();
-                        previewImage.classList.add("d-none");
                     } else {
                         showNotification(result.message || "Failed to post item", "error");
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+                } catch (error) {
+                    console.error("Error:", error);
                     showNotification("An error occurred", "error");
-                });
+                }
             });
         }
     }
 
-    // Chat Messaging System
+    // Real-time Chat Setup
     function setupChatMessaging() {
         const chatMessages = document.getElementById("chatMessages");
         const messageInput = document.getElementById("messageInput");
         const sendMessageButton = document.getElementById("sendMessage");
 
-        function loadMessages() {
-            const messages = JSON.parse(localStorage.getItem("chatMessages")) || [];
-            chatMessages.innerHTML = "";
-            messages.forEach(msg => {
-                const messageDiv = document.createElement("div");
-                messageDiv.className = `message ${msg.type}`;
-                messageDiv.textContent = msg.text;
-                chatMessages.appendChild(messageDiv);
-            });
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+        const senderId = localStorage.getItem("userId");
+        const receiverId = localStorage.getItem("chatReceiver");
 
-        if (sendMessageButton && messageInput) {
-            sendMessageButton.addEventListener("click", sendMessage);
-            messageInput.addEventListener("keypress", (e) => {
-                if (e.key === "Enter") sendMessage();
-            });
-        }
+        socket.emit("joinRoom", { senderId, receiverId });
 
         function sendMessage() {
             const text = messageInput.value.trim();
             if (!text) return;
 
-            const messages = JSON.parse(localStorage.getItem("chatMessages")) || [];
-            messages.push({ text, type: "sent", timestamp: Date.now() });
-            localStorage.setItem("chatMessages", JSON.stringify(messages));
-
-            // Simulated auto-reply
-            setTimeout(() => {
-                const replyMessages = [
-                    "Thanks for your message!",
-                    "I'll get back to you soon.",
-                    "How can I help you today?"
-                ];
-                const randomReply = replyMessages[Math.floor(Math.random() * replyMessages.length)];
-                
-                messages.push({ 
-                    text: randomReply, 
-                    type: "received", 
-                    timestamp: Date.now() 
-                });
-                localStorage.setItem("chatMessages", JSON.stringify(messages));
-                loadMessages();
-            }, 1000);
-
+            socket.emit("sendMessage", { senderId, receiverId, text });
             messageInput.value = "";
-            loadMessages();
         }
 
-        // Initial message load
-        loadMessages();
+        socket.on("receiveMessage", (message) => {
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${message.sender === senderId ? "sent" : "received"}`;
+    messageDiv.innerHTML = `${message.text} <span class="status">${message.read ? "Seen" : "Delivered"}</span>`;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Mark message as read
+    if (message.sender !== senderId) {
+        socket.emit("markAsRead", { messageId: message._id });
+    }
+});
+        
+        socket.on("receiveMessage", (message) => {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${message.sender === senderId ? "sent" : "received"}`;
+            messageDiv.textContent = message.text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        if (sendMessageButton) {
+            sendMessageButton.addEventListener("click", sendMessage);
+            messageInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") sendMessage();
+            });
+        }
     }
 
-    // Notification System
     function showNotification(message, type = "info") {
         const notification = document.createElement("div");
         notification.className = `notification ${type}`;
@@ -238,107 +174,333 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 10);
     }
 
+    function setupCurrencyUpdate() {
+        document.getElementById("itemCurrency").addEventListener("change", function() {
+            const currencySymbol = {
+                'NGN': '₦',
+                'USD': '$',
+                'EUR': '€',
+                'GBP': '£',
+                'KES': 'KSh',
+                'ZAR': 'R',
+                'AED': 'د.إ',
+                'GHS': '₵',
+                'XAF': 'CFA',
+                'XOF': 'CFA'
+            };
+            
+            const symbol = currencySymbol[this.value] || '₦';
+            document.getElementById("currencySymbol").textContent = symbol;
+        });
+    }
+
     // Initialize all features
     setupDarkMode();
     setupMobileMenu();
     setupFeaturedListings();
     setupItemPostForm();
     setupChatMessaging();
+    setupCurrencyUpdate();
 
-    // Global error handling
-    window.addEventListener('error', (event) => {
+    window.addEventListener("error", (event) => {
         showNotification(`An error occurred: ${event.message}`, "error");
     });
 });
 
-// Function to validate form inputs
-function validateFormInputs() {
-    const itemName = document.getElementById('itemName').value.trim();
-    const itemPrice = document.getElementById('itemPrice').value.trim();
-    const itemLocation = document.getElementById('itemLocation').value.trim();
-    const itemCurrency = document.getElementById('itemCurrency').value;
+document.addEventListener("DOMContentLoaded", () => {
+    const BASE_URL = "https://your-marketplace-api.com/api";
+    const socket = io(BASE_URL);
 
-    // Basic validation
-    if (!itemName) {
-        alert('Please enter item name');
-        return false;
+   /** function setupDarkMode() {
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    console.log("Dark Mode status:", localStorage.getItem("darkMode"));
+
+    if (localStorage.getItem("darkMode") === "enabled") {
+        document.body.classList.add("dark-mode");
     }
 
-    if (!itemPrice || parseFloat(itemPrice) <= 0) {
-        alert('Please enter a valid price');
-        return false;
-    }
-
-    if (!itemLocation) {
-        alert('Please enter item location');
-        return false;
-    }
-
-    return true;
-}
-
-// Function to submit form data
-async function submitItemForm(event) {
-    event.preventDefault(); // Prevent default form submission
-
-    // Validate inputs first
-    if (!validateFormInputs()) {
-        return;
-    }
-
-    // Prepare form data
-    const formData = {
-        itemName: document.getElementById('itemName').value.trim(),
-        itemCurrency: document.getElementById('itemCurrency').value,
-        itemPrice: parseFloat(document.getElementById('itemPrice').value),
-        itemLocation: document.getElementById('itemLocation').value.trim()
-    };
-
-    try {
-        // Replace with your actual backend endpoint
-        const response = await fetch('/api/submit-item', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener("click", () => {
+            console.log("Button clicked!");
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode") ? "enabled" : "disabled");
         });
+    }
+}
+**/
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+
+    function setupAuthForms() {
+        const registerForm = document.getElementById("registerForm");
+        const loginForm = document.getElementById("loginForm");
+
+        if (registerForm) {
+            registerForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(registerForm);
+                const response = await fetch(`${BASE_URL}/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert("Registration successful! Please login.");
+                    window.location.href = "login.html";
+                } else {
+                    alert(data.message);
+                }
+            });
         }
 
-        const result = await response.json();
-        
-        // Success handling
-        alert('Item submitted successfully!');
-        
-        // Optional: Reset form or redirect
-        document.getElementById('postItemForm').reset();
-    } catch (error) {
-        console.error('Error submitting item:', error);
-        alert('Failed to submit item. Please try again.');
+        if (loginForm) {
+            loginForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(loginForm);
+                const response = await fetch(`${BASE_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("userId", data.user._id);
+                    window.location.href = "dashboard.html";
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
     }
+
+    function setupUserDashboard() {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Please login to access your dashboard.");
+            window.location.href = "login.html";
+        }
+
+        fetch(`${BASE_URL}/profile`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("username").textContent = data.username;
+            document.getElementById("userEmail").textContent = data.email;
+        })
+        .catch(() => {
+            alert("Failed to fetch profile.");
+        });
+    }
+
+    function setupItemPosting() {
+        const postItemForm = document.getElementById("postItemForm");
+        if (postItemForm) {
+            postItemForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(postItemForm);
+                formData.append("image", document.getElementById("itemImage").files[0]);
+
+                const response = await fetch(`${BASE_URL}/items/create`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert("Item posted successfully!");
+                    postItemForm.reset();
+                } else {
+                    alert("Failed to post item.");
+                }
+            });
+        }
+    }
+
+    function setupViewItemDetails() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemId = urlParams.get("id");
+
+        if (itemId) {
+            fetch(`${BASE_URL}/items/${itemId}`)
+                .then(response => response.json())
+                .then(item => {
+                    document.getElementById("itemTitle").textContent = item.name;
+                    document.getElementById("itemImage").src = item.imageUrl;
+                    document.getElementById("itemPrice").textContent = item.price;
+                    document.getElementById("itemLocation").textContent = item.location;
+                    document.getElementById("itemCategory").textContent = item.category;
+                })
+                .catch(() => alert("Failed to load item details."));
+        }
+    }
+
+    function setupRealTimeChat() {
+        const chatMessages = document.getElementById("chatMessages");
+        const messageInput = document.getElementById("messageInput");
+        const sendMessageButton = document.getElementById("sendMessage");
+
+        const senderId = localStorage.getItem("userId");
+        const receiverId = localStorage.getItem("chatReceiver");
+
+        // Emit typing event when user types
+    messageInput.addEventListener("input", () => {
+        socket.emit("typing", { senderId, receiverId });
+    });
+
+    // Listen for typing events
+    socket.on("showTyping", (data) => {
+        if (data.senderId !== senderId) {
+            typingIndicator.textContent = "User is typing...";
+            setTimeout(() => {
+                typingIndicator.textContent = "";
+            }, 3000);
+        }
+  });
+        socket.emit("joinRoom", { senderId, receiverId });
+        
+        const recordButton = document.getElementById("recordButton");
+let mediaRecorder;
+let audioChunks = [];
+
+recordButton.addEventListener("mousedown", async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+    };
+});
+
+recordButton.addEventListener("mouseup", () => {
+    mediaRecorder.stop();
+    mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob);
+
+        await fetch(`${BASE_URL}/messages/audio`, {
+            method: "POST",
+            body: formData,
+            headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+        });
+
+        audioChunks = [];
+    };
+});
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            socket.emit("sendMessage", { senderId, receiverId, text });
+            messageInput.value = "";
+        }
+
+        socket.on("receiveMessage", (message) => {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${message.sender === senderId ? "sent" : "received"}`;
+            messageDiv.textContent = message.text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        if (sendMessageButton) {
+            sendMessageButton.addEventListener("click", sendMessage);
+            messageInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") sendMessage();
+            });
+        }
+    }
+    
+    setupAuthForms();
+    setupUserDashboard();
+    setupItemPosting();
+    setupViewItemDetails();
+    setupRealTimeChat();
+});
+
+const BASE_URL = "https://your-marketplace-api.com/api";
+    const socket = io(BASE_URL);
+
+function updateUnreadCount() {
+    const userId = localStorage.getItem("userId");
+
+    fetch(`${BASE_URL}/chat/unread/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            const unreadCount = data.unread;
+            const messagesMenu = document.getElementById("messagesMenu");
+            if (unreadCount > 0) {
+                messagesMenu.textContent = `Messages (${unreadCount})`;
+            } else {
+                messagesMenu.textContent = "Messages";
+            }
+        })
+        .catch(error => console.error("Error fetching unread messages:", error));
 }
 
-// Add event listener to form submission
-document.getElementById('postItemForm').addEventListener('submit', submitItemForm);
+// Call this function every 10 seconds
+setInterval(updateUnreadCount, 10000);
 
-// Currency symbol update
-document.getElementById('itemCurrency').addEventListener('change', function() {
-    const currencySymbol = {
-        'NGN': '₦',
-        'USD': '$',
-        'EUR': '€',
-        'GBP': '£',
-        'KES': 'KSh',
-        'ZAR': 'R',
-        'AED': 'د.إ',
-        'GHS': '₵',
-        'XAF': 'CFA',
-        'XOF': 'CFA'
-    };
-    
-    const symbol = currencySymbol[this.value] || '₦';
-    document.getElementById('currencySymbol').textContent = symbol;
+document.addEventListener("DOMContentLoaded", () => {
+    const BASE_URL = "https://your-marketplace-api.com/api";
+    const socket = io(BASE_URL);
+    const messageSound = new Audio("message.mp3"); // Add a message sound file
+
+    function setupRealTimeChat() {
+        const chatMessages = document.getElementById("chatMessages");
+        const messageInput = document.getElementById("messageInput");
+        const sendMessageButton = document.getElementById("sendMessage");
+
+        const senderId = localStorage.getItem("userId");
+        const receiverId = localStorage.getItem("chatReceiver");
+
+        socket.emit("joinRoom", { senderId, receiverId });
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            socket.emit("sendMessage", { senderId, receiverId, text });
+            messageInput.value = "";
+        }
+
+        socket.on("receiveMessage", (message) => {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${message.sender === senderId ? "sent" : "received"}`;
+            messageDiv.textContent = message.text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Play sound alert
+            messageSound.play();
+
+            // Push Notification - Check Permission
+            if ("Notification" in window) {
+                if (Notification.permission === "granted") {
+                    new Notification("New Message", { body: message.text });
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === "granted") {
+                            new Notification("New Message", { body: message.text });
+                        }
+                    });
+                }
+            }
+        });
+
+        if (sendMessageButton) {
+            sendMessageButton.addEventListener("click", sendMessage);
+            messageInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") sendMessage();
+            });
+        }
+    }
+
+    setupRealTimeChat();
 });

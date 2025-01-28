@@ -9,6 +9,28 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="light-mode">
+     <div id="overlay" class="overlay"></div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-md">
+        <div class="container">
+            <a class="navbar-brand font-bold text-xl text-primary" href="index.html">Marketplace</a>
+            <button id="menuToggle" class="navbar-toggler border-0">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="mobileMenu" class="mobile-menu">
+    <ul class="list-unstyled p-5">
+        <li class="my-2"><a href="dashboard.html" class="w-100">Dashboard</a></li>
+        <hr>
+        <li class="my-2"><a href="listings.html" class="nav-link">Browse Listings</a></li>
+        <hr>
+        <li class="my-2"><a href="post-item.html" class="nav-link">Sell Items</a></li>
+        <hr>
+        <li class="my-2"><a href="profile.html" class="w-100">Profile</a></li>
+        <hr>
+        <li class="my-2"><a href="register.html" class="w-100">Sign Up</a></li>
+        <hr>
+        <li><button id="darkModeToggle" class="btn btn-secondary w-100 mt-2">Dark Mode</button></li>
+    </ul>
+</div>
     <div class="container mt-5 p-4 bg-white shadow rounded form-container">
         <h2 class="text-2xl font-bold text-primary text-center">Post Your Item</h2>
 
@@ -74,9 +96,9 @@
             <button type="submit" class="btn btn-primary w-100 mt-4">Post Item</button>
         </form>
 
-        <button id="darkModeToggle" class="btn btn-secondary mt-3">Toggle Dark Mode</button>
+        <!--<button id="darkModeToggle" class="btn btn-secondary mt-3">Toggle Dark Mode</button>-->
     </div>
-
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

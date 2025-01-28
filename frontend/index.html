@@ -15,16 +15,19 @@
         <div class="container">
             <a class="navbar-brand font-bold text-xl text-primary" href="#">Marketplace</a>
             
-            <!-- Mobile Menu Button -->
+            <!-- Mobile Menu Button --><a href="messages.html" id="messagesMenu">Chat</a>
             <button id="menuToggle" class="navbar-toggler border-0 focus:outline-none">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
+             
             <!-- Slide-in Menu -->
             <div id="mobileMenu" class="mobile-menu">
     <ul class="list-unstyled p-5">
         <li class="my-2"><a href="dashboard.html" class="w-100">Dashboard</a></li>
         <hr>
+        <li class="my-2"><a href="messages.html" id="messagesMenu"class="nav-link">Chat</a></li>
+                <hr>
         <li class="my-2"><a href="listings.html" class="nav-link">Browse Listings</a></li>
         <hr>
         <li class="my-2"><a href="post-item.html" class="nav-link">Sell Item</a></li>
@@ -59,7 +62,7 @@
             <!-- Items will be loaded dynamically -->
         </div>
     </section>
-
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

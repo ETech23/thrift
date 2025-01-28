@@ -41,16 +41,20 @@
 
         <div class="chat-box">
             <div id="chatMessages" class="chat-messages">
+
+                
                 <!-- Messages will load here dynamically -->
             </div>
 
             <div class="chat-input">
+                                <p id="typingIndicator"></p>
                 <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
+                <button id="recordButton">🎤</button>
                 <button id="sendMessage" class="btn btn-primary">Send</button>
             </div>
         </div>
     </section>
-
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
