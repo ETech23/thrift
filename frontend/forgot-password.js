@@ -1,3 +1,5 @@
+const BASE_URL = "https://thrift2.vercel.app/api";
+
 document.getElementById("resetPasswordForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("email").value;

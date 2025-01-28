@@ -241,73 +241,96 @@ function setupAuthForms() {
     const loginForm = document.getElementById("loginForm");
 
     if (registerForm) {
-        registerForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const formData = new FormData(registerForm);
-            const formObject = Object.fromEntries(formData.entries());  // ✅ Fix: Convert FormData correctly
+    registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(registerForm);
+        const formObject = Object.fromEntries(formData.entries());
 
-            if (formObject.password !== formObject.confirmPassword) {  // ✅ Fix: Password confirmation check
-                alert("Passwords do not match!");
+        if (formObject.password !== formObject.confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${BASE_URL}/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formObject),
+            });
+
+            const text = await response.text();  // ✅ Read raw response before JSON parsing
+            console.log("Raw API Response:", text);
+
+            const data = JSON.parse(text);  // ✅ Now parse JSON safely
+            console.log("Parsed JSON Response:", data);
+
+            if (data.success) {
+                alert("Registration successful! Please login.");
+                window.location.href = "login.html";
+            } else {
+                alert(data.message || "Registration failed.");
+            }
+        } catch (error) {
+            alert("Error connecting to the server.");
+            console.error("Registration Error:", error);
+        }
+    });
+}
+
+    if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(loginForm);
+        const formObject = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(`${BASE_URL}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formObject),
+            });
+
+            const data = await response.json();
+            console.log("Login API Response:", JSON.stringify(data, null, 2));  // ✅ Fix: Display JSON properly
+
+            if (!data.success) {
+                console.error("Login Failed - API Response:", data);
+                alert(data.message || "Login failed.");
                 return;
             }
 
-            try {
-                const response = await fetch(`${BASE_URL}/register`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formObject)
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    alert("Registration successful! Please login.");
-                    window.location.href = "login.html";
-                } else {
-                    alert(data.message || "Registration failed.");
-                }
-            } catch (error) {
-                alert("Error connecting to the server.");
-                console.error(error);
+            if (!data.token) {
+                console.error("Login Failed - Token Missing:", data);
+                alert("Token missing. Login failed.");
+                return;
             }
-        });
-    }
 
-    if (loginForm) {
-        loginForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const formData = new FormData(loginForm);
-            const formObject = Object.fromEntries(formData.entries());  // ✅ Fix: Convert FormData correctly
-
-            try {
-                const response = await fetch(`${BASE_URL}/login`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formObject)
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    localStorage.setItem("token", data.token);
-                    localStorage.setItem("userId", data.user._id);
-                    window.location.href = "dashboard.html";
-                } else {
-                    alert(data.message || "Login failed.");
-                }
-            } catch (error) {
-                alert("Error connecting to the server.");
-                console.error(error);
+            if (!data.user || !data.user._id) {
+                console.error("Login Failed - User ID Missing:", data);
+                alert("User ID missing. Login failed.");
+                return;
             }
-        });
-    }
+
+            console.log("✅ Storing Token in LocalStorage...");
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("userId", data.user._id);
+
+            console.log("✅ Login Successful! Redirecting...");
+            window.location.href = "dashboard.html";  // ✅ Redirect after successful login
+        } catch (error) {
+            console.error("Login Error:", error);
+            alert("Error connecting to the server.");
+        }
+    });
+}
 }
 
-    function setupUserDashboard() {
+    /**function setupUserDashboard() {
         const token = localStorage.getItem("token");
         if (!token) {
             alert("Please login to access your dashboard.");
             window.location.href = "login.html";
         }
-
         fetch(`${BASE_URL}/profile`, {
             headers: { "Authorization": `Bearer ${token}` }
         })
@@ -319,7 +342,7 @@ function setupAuthForms() {
         .catch(() => {
             alert("Failed to fetch profile.");
         });
-    }
+    }**/
 
     function setupItemPosting() {
         const postItemForm = document.getElementById("postItemForm");
