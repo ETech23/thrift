@@ -38,35 +38,57 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Fetch Featured Listings from Backend
     function setupFeaturedListings() {
-        const featuredListings = document.getElementById("featuredListings");
+    const featuredListings = document.getElementById("featuredListings");
 
-        fetch(`${BASE_URL}/items?limit=4`)
-            .then(response => response.json())
-            .then(data => {
-                featuredListings.innerHTML = "";
-                data.items.forEach(item => {
-                    const card = document.createElement("div");
-                    card.className = "col-md-4 mb-4";
-                    card.innerHTML = `
-                        <div class="card">
-                            <img src="${item.imageUrl}" class="card-img-top" alt="${item.name}">
-                            <div class="card-body">
-                                <h5 class="card-title">${item.name}</h5>
-                                <p class="text-muted">${item.price} ${item.currency || ''}</p>
-                                <p class="text-sm ${item.anonymous ? 'text-danger' : 'text-muted'}">
-                                    ${item.anonymous ? 'Anonymous' : 'Verified Seller'}
-                                </p>
-                                <a href="item-details.html?id=${item._id}" class="btn btn-primary w-100">View Item</a>
-                            </div>
-                        </div>
-                    `;
-                    featuredListings.appendChild(card);
-                });
-            })
-            .catch(error => console.error("Error fetching items:", error));
-    }
+    fetch(`${BASE_URL}/items?limit=4`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("🔍 Full API Response:", JSON.stringify(data, null, 2));  // ✅ Debug full response
+
+            if (!data || typeof data !== "object") {
+                console.error("❌ Invalid API response format:", data);
+                featuredListings.innerHTML = "<p class='text-danger'>Invalid API response.</p>";
+                return;
+            }
+
+            if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+                console.warn("⚠ No valid items returned from API");
+                featuredListings.innerHTML = "<p class='text-danger'>No featured listings available.</p>";
+                return;
+            }
+
+            featuredListings.innerHTML = "";
+data.items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "col-md-4 mb-4";
+    card.innerHTML = `
+        <div class="card shadow-sm">
+            <img src="${item.imageUrl}" class="card-img-top" alt="${item.name}">
+            <div class="card-body">
+                <h5 class="card-title text-primary">${item.name}</h5>
+                <p class="text-muted">
+                    <strong>${item.price}</strong> ${item.currency || ''}
+                </p>
+                <p class="text-muted">
+                    <strong>${""}</strong> ${item.location || ''}
+                </p>
+                <p class="text-sm ${item.anonymous ? 'text-danger' : 'text-muted'}">
+                    ${item.anonymous ? 'Anonymous' : 'Verified Seller'}
+                </p>
+                <a href="item-details.html?id=${item._id}" class="btn btn-primary w-100">View Item</a>
+            </div>
+        </div>
+    `;
+
+                featuredListings.appendChild(card);
+            });
+        })
+        .catch(error => {
+            console.error("❌ Error fetching items:", error);
+            featuredListings.innerHTML = "<p class='text-danger'>Failed to load featured listings.</p>";
+        });
+}
 
     // Item Posting Form
     function setupItemPostForm() {
@@ -109,6 +131,55 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function setupChatPage() {
+    const params = new URLSearchParams(window.location.search);
+    const chatId = params.get("chatId");
+
+    if (!chatId) {
+        alert("Invalid chat.");
+        window.location.href = "index.html";
+        return;
+    }
+
+    fetch(`${BASE_URL}/chat/${chatId}`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
+    .then(response => response.json())
+    .then(chat => {
+        document.getElementById("chatTitle").textContent = chat.anonymous ? "Anonymous Chat" : `Chat with ${chat.seller.username}`;
+
+        const chatBox = document.getElementById("chatMessages");
+        chat.messages.forEach(message => {
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `message ${message.sender === localStorage.getItem("userId") ? "sent" : "received"}`;
+            msgDiv.textContent = message.text;
+            chatBox.appendChild(msgDiv);
+        });
+
+        document.getElementById("sendMessage").addEventListener("click", sendMessage);
+    })
+    .catch(error => console.error("Error loading chat:", error));
+}
+
+function sendMessage() {
+    const chatId = new URLSearchParams(window.location.search).get("chatId");
+    const messageInput = document.getElementById("messageInput");
+
+    fetch(`${BASE_URL}/chat/${chatId}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}` },
+        body: JSON.stringify({ text: messageInput.value })
+    })
+    .then(response => response.json())
+    .then(() => {
+        messageInput.value = "";
+        setupChatPage();  // Reload messages
+    })
+    .catch(error => console.error("Error sending message:", error));
+}
+
+document.addEventListener("DOMContentLoaded", setupChatPage);
+    
     // Real-time Chat Setup
     function setupChatMessaging() {
         const chatMessages = document.getElementById("chatMessages");
@@ -352,6 +423,8 @@ function setupAuthForms() {
     }**/
     
 
+            
+
     function setupItemPosting() {
         const postItemForm = document.getElementById("postItemForm");
         if (postItemForm) {
@@ -474,7 +547,7 @@ recordButton.addEventListener("mouseup", () => {
     }
     
     setupAuthForms();
-    setupUserDashboard();
+    //setupUserDashboard();
     setupItemPosting();
     setupViewItemDetails();
     setupRealTimeChat();

@@ -15,7 +15,9 @@
         <div class="container">
             <a class="navbar-brand font-bold text-xl text-primary" href="#">Marketplace</a>
             
-            <!-- Mobile Menu Button --><a href="messages.html" id="messagesMenu">Chat</a>
+            <p id="darkModeToggle" class="btn   mt-2">🔅</p>
+            
+            <!-- Mobile Menu Button --><a href="messages.html" id="messagesMenu" class="nav-link" >Chat</a>
             <button id="menuToggle" class="navbar-toggler border-0 focus:outline-none">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -62,8 +64,11 @@
     <section class="container mt-6">
         <h2 class="text-2xl font-bold text-center mb-4">Featured Listings</h2>
         <div class="row" id="featuredListings">
+            
             <!-- Items will be loaded dynamically -->
+            
         </div>
+        <a href="item-details.html?id=${item._id}" class="btn btn-primary w-100">View Item</a>
     </section>
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>

@@ -7,6 +7,125 @@
     --text-dark: #E5E7EB;
 }
 
+.container,
+.text-primary,
+.text-muted,
+.btn {
+    transition: all 0.3s ease;
+}
+
+.dark-mode #itemDetails h2.text-primary {
+    color: #ffffff !important;
+}
+
+.dark-mode #itemDetails .text-muted {
+    color: #cccccc !important;
+}
+
+.dark-mode #itemDetails strong {
+    color: #ffffff;
+}
+
+.dark-mode #itemDetails {
+    background-color: inherit;
+}
+
+.dark-mode #itemDetails .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.dark-mode #itemDetails .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Add smooth transitions */
+#itemDetails, 
+#itemDetails h2,
+#itemDetails p,
+#itemDetails .btn {
+    transition: all 0.3s ease;
+}
+
+.dark-mode .card {
+    background-color: #1a1a1a !important;
+    border-color: #2d2d2d !important;
+}
+
+.dark-mode .card-title.text-primary {
+    color: #ffffff !important;
+}
+
+.dark-mode .card .text-muted {
+    color: #cccccc !important;
+}
+
+.dark-mode .card strong {
+    color: #ffffff;
+}
+
+.dark-mode .card .btn-primary {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.dark-mode .card .btn-primary:hover {
+    background-color: #004494;
+    border-color: #003d84;
+}
+
+.dark-mode .card .text-danger {
+    color: #ff6b6b !important;
+}
+
+/* Smooth transitions */
+.card,
+.card-body,
+.card-title,
+.text-muted,
+.btn-primary {
+    transition: all 0.3s ease;
+}
+
+.dark-mode #featuredListings {
+    background-color: inherit !important;
+}
+
+.dark-mode .row {
+    background-color: inherit !important;
+}
+
+/* If you have a container wrapping the featuredListings */
+.dark-mode .container {
+    background-color: inherit !important;
+}
+
+/* For any parent sections or divs */
+.dark-mode section {
+    background-color: inherit !important;
+}
+
+/* Ensure smooth transition */
+#featuredListings,
+.row,
+.container,
+section {
+    transition: background-color 0.3s ease;
+}
+
+dark-mode * {
+    background-color: inherit !important;
+}
+
+/* Then specifically style elements that need different backgrounds */
+.dark-mode .card {
+    background-color: #1a1a1a !important;
+}
+
+.dark-mode .navbar {
+    background-color: #1a1a1a !important;
+}
 /* Light Mode */
 body.light-mode {
     background-color: var(--light-bg);

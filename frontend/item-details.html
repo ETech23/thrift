@@ -35,12 +35,110 @@
         </div>
     </nav>
  <div id="overlay" class="overlay"></div>
-    <!-- Item Details -->
-    <section class="container mt-5" id="itemDetails">
+    <!-- Item Details 
+    <section class="container mt-5" id="itemDetails">-->
+        <section class="container mt-5" id="itemDetails">
+    <div class="row">
+        <div class="col-md-6">
+            <img id="itemImage" src="" class="img-fluid rounded shadow-sm" alt="Item Image">
+        </div>
+        <div class="col-md-6">
+            <!-- Match the navbar-brand styling for consistency -->
+            <h2 id="username" class="text-primary"></h2>
+            <h2 id="itemName" class="text-primary"></h2>
+            <!-- Match navbar-light theme colors -->
+            <p class="text-muted">
+                <strong>Price:</strong> 
+                <span id="itemPrice"></span>
+            </p>
+            <p class="text-muted">
+                <strong>Location:</strong> 
+                <span id="itemLocation"></span>
+            </p>
+            <p class="text-muted">
+                <strong>Category:</strong> 
+                <span id="itemCategory"></span>
+            </p>
+            <div id="sellerDetails"></div>
+            <button id="chatWithSeller" class="btn btn-success mt-3">Chat with Seller</button>
+        </div>
+    </div>
+</section>
        
-        <!-- Content will be dynamically added here -->
-    </section>
+        <!-- Content will be dynamically added here 
+    </section>-->
 
+    <script>
+    function setupItemDetailsPage() {
+    const params = new URLSearchParams(window.location.search);
+    const itemId = params.get("id");
+
+    if (!itemId) {
+        alert("Invalid item ID.");
+        console.log("Current URL:", window.location.href);
+        window.location.href = "index.html";
+        return;
+    }
+
+    console.log("Fetching item from:", `${BASE_URL}/items/${itemId}`);
+
+    fetch(`${BASE_URL}/items/${itemId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to fetch: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Fetched item:", data);
+
+            // Ensure the response contains `item`
+            if (!data.success || !data.item) {
+                alert("Item not found.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            const item = data.item; // Extract the item object
+
+            // Get elements safely
+            const itemName = document.getElementById("itemName");
+            const itemPrice = document.getElementById("itemPrice");
+            const itemImage = document.getElementById("itemImage");
+            const itemLocation = document.getElementById("itemLocation");
+            const itemCategory = document.getElementById("itemCategory");
+            const sellerDetails = document.getElementById("sellerDetails");
+            const chatButton = document.getElementById("chatWithSeller");
+
+            if (!itemName || !itemPrice || !itemImage || !itemLocation || !itemCategory || !sellerDetails || !chatButton) {
+                console.error("❌ One or more elements are missing in the HTML.");
+                return;
+            }
+
+            // Update the UI
+            itemName.textContent = item.name;
+            itemPrice.textContent = item.price;
+            itemImage.src = item.imageUrl;
+            itemLocation.textContent = item.location;
+            itemCategory.textContent = item.category;
+
+            if (item.anonymous) {
+                sellerDetails.innerHTML = "<p>Seller: Anonymous</p>";
+            } else {
+                sellerDetails.innerHTML = `<p>Seller: ${item.seller.username}</p>`;
+            }
+
+            // Attach chat button event
+            chatButton.addEventListener("click", () => startChat(item.seller._id, item.anonymous));
+        })
+        .catch(error => {
+            console.error("❌ Error fetching item:", error);
+            alert("Failed to load item details.");
+        });
+}
+
+document.addEventListener("DOMContentLoaded", setupItemDetailsPage);
+    </script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
