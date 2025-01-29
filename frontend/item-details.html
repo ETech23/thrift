@@ -34,6 +34,9 @@
 </div>
         </div>
     </nav>
+    <div id="errorMessage"></div>
+<div id="username"></div>
+<div id="userEmail"></div>
  <div id="overlay" class="overlay"></div>
     <!-- Item Details 
     <section class="container mt-5" id="itemDetails">-->
@@ -133,7 +136,7 @@
         })
         .catch(error => {
             console.error("❌ Error fetching item:", error);
-            alert("Failed to load item details.");
+            
         });
 }
 

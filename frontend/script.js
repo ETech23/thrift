@@ -464,7 +464,7 @@ function setupAuthForms() {
                     document.getElementById("itemLocation").textContent = item.location;
                     document.getElementById("itemCategory").textContent = item.category;
                 })
-                .catch(() => alert("Failed to load item details."));
+                .catch(() => console.log("Failed to load item details."));
         }
     }
 
