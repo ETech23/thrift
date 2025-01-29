@@ -100,8 +100,19 @@
             <button type="submit" class="btn btn-primary w-100 mt-4">Post Item</button>
         </form>
 
+        
         <!--<button id="darkModeToggle" class="btn btn-secondary mt-3">Toggle Dark Mode</button>-->
     </div>
+            
+<script>
+    const token = localStorage.getItem("token");
+
+if (!token) {
+    alert("Login to sell your items");
+  window.location.href = "index.html"; 
+}
+    </script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>

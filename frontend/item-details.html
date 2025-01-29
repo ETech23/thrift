@@ -228,7 +228,7 @@ function setupChatButton(item, chatButton) {
         console.log("Item data in setupChatButton:", item);
         
         // Check if seller ID exists in different possible locations
-        const sellerId = item.postedBy
+        const sellerId = item.seller
         //item.seller?.userId || item.seller?._id || item.sellerId || item.userId;
         
         if (!sellerId) {

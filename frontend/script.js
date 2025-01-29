@@ -134,47 +134,56 @@ data.items.forEach(item => {
         });
 }
 
-    // Item Posting Form
-    function setupItemPostForm() {
-        const postItemForm = document.getElementById("postItemForm");
+async function setupItemPostForm() {
+    const postItemForm = document.getElementById("postItemForm");
 
-        if (postItemForm) {
-            postItemForm.addEventListener("submit", async (event) => {
-                event.preventDefault();
+    if (postItemForm) {
+        postItemForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
 
-                const formData = new FormData();
-                formData.append("name", document.getElementById("itemName").value);
-                formData.append("price", document.getElementById("itemPrice").value);
-                formData.append("category", document.getElementById("itemCategory").value);
-                formData.append("location", document.getElementById("itemLocation").value);
-                formData.append("currency", document.getElementById("itemCurrency").value);
-                formData.append("anonymous", document.getElementById("anonymousToggle").checked);
-                formData.append("image", document.getElementById("itemImage").files[0]);
+            const formData = new FormData();
+            formData.append("name", document.getElementById("itemName").value);
+            formData.append("price", document.getElementById("itemPrice").value);
+            formData.append("category", document.getElementById("itemCategory").value);
+            formData.append("location", document.getElementById("itemLocation").value);
+            formData.append("currency", document.getElementById("itemCurrency").value);
+            formData.append("anonymous", document.getElementById("anonymousToggle").checked);
+            formData.append("image", document.getElementById("itemImage").files[0]);
 
-                try {
-                    const response = await fetch(`${BASE_URL}/items/create`, {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${localStorage.getItem("token")}`
-                        },
-                        body: formData
-                    });
-
-                    const result = await response.json();
-                    if (result.success) {
-                        showNotification("Item posted successfully!", "success");
-                        postItemForm.reset();
-                    } else {
-                        showNotification(result.message || "Failed to post item", "error");
-                    }
-                } catch (error) {
-                    console.error("Error:", error);
-                    showNotification("An error occurred", "error");
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    alert("You must be logged in to post an item.");
+                    window.location.href = "login.html";
+                    return;
                 }
-            });
-        }
-    }
 
+                console.log("🔍 Sending form data to API...");
+
+                const response = await fetch(`${BASE_URL}/items/create`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}` // ✅ Ensure token is passed
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                console.log("✅ API Response:", JSON.stringify(result, null, 2)); // ✅ Log full response
+
+                if (result.success) {
+                    showNotification("Item posted successfully!", "success");
+                    postItemForm.reset();
+                } else {
+                    showNotification(result.message || "Failed to post item", "error");
+                }
+            } catch (error) {
+                console.error("❌ Error:", error);
+                showNotification("An error occurred", "error");
+            }
+        });
+    }
+}
     function setupChatPage() {
     const params = new URLSearchParams(window.location.search);
     const chatId = params.get("chatId");
