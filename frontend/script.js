@@ -58,8 +58,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            featuredListings.innerHTML = "";
+                     const currencySymbol = {
+    'NGN': '₦',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'KES': 'KSh',
+    'ZAR': 'R',
+    'AED': 'د.إ',
+    'GHS': '₵',
+    'XAF': 'CFA',
+    'XOF': 'CFA'
+};
+/**
+featuredListings.innerHTML = "";
 data.items.forEach(item => {
+    // Get the correct currency symbol based on item's currency, default to ₦ if not found
+    const symbol = currencySymbol[item.currency] || '₦';
+    
     const card = document.createElement("div");
     card.className = "col-md-4 mb-4";
     card.innerHTML = `
@@ -68,7 +84,35 @@ data.items.forEach(item => {
             <div class="card-body">
                 <h5 class="card-title text-primary">${item.name}</h5>
                 <p class="text-muted">
-                    <strong>${item.price}</strong> ${item.currency || ''}
+                    <strong>${symbol}${item.price}</strong>
+                </p>
+                <p class="text-muted">
+                    <strong>${""}</strong> ${item.location || ''}
+                </p>
+                <p class="text-sm ${item.anonymous ? 'text-danger' : 'text-muted'}">
+                    ${item.anonymous ? 'Anonymous' : 'Verified Seller'}
+                </p>
+                <a href="item-details.html?id=${item._id}" class="btn btn-primary w-100">View Item</a>
+            </div>
+        </div>
+    `;**/
+
+featuredListings.innerHTML = "";
+data.items.forEach(item => {
+    const symbol = currencySymbol[item.currency] || '₦';
+    
+    // Format the price with thousand separators
+    const formattedPrice = new Intl.NumberFormat('en-US').format(item.price);
+    
+    const card = document.createElement("div");
+    card.className = "col-md-4 mb-4";
+    card.innerHTML = `
+        <div class="card shadow-sm">
+            <img src="${item.imageUrl}" class="card-img-top" alt="${item.name}">
+            <div class="card-body">
+                <h5 class="card-title text-primary">${item.name}</h5>
+                <p class="text-muted">
+                    <strong>${symbol}${formattedPrice}</strong>
                 </p>
                 <p class="text-muted">
                     <strong>${""}</strong> ${item.location || ''}
@@ -278,6 +322,80 @@ document.addEventListener("DOMContentLoaded", setupChatPage);
     });
 });
 
+const authLinks = document.querySelector('[data-auth-links]');
+
+function updateAuthLinks() {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+        authLinks.innerHTML = `
+            <li class="my-2">
+                <a href="#" onclick="handleLogout(event)" class="w-100">Logout</a>
+            </li>
+        `;
+    } else {
+        authLinks.innerHTML = `
+            <li class="my-2">
+                <a href="login.html" class="w-100">Sign In</a>
+            </li>
+        `;
+    }
+}
+
+function handleLogout(event) {
+    event.preventDefault();
+    
+    // Create a confirmation dialog
+    const confirmDialog = document.createElement('div');
+    confirmDialog.className = 'modal fade';
+    confirmDialog.setAttribute('id', 'logoutConfirmModal');
+    confirmDialog.setAttribute('tabindex', '-1');
+    confirmDialog.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to logout?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmLogout()">Yes, Logout</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add the dialog to the document if it doesn't exist
+    if (!document.getElementById('logoutConfirmModal')) {
+        document.body.appendChild(confirmDialog);
+    }
+
+    // Show the modal using Bootstrap
+    const modal = new bootstrap.Modal(document.getElementById('logoutConfirmModal'));
+    modal.show();
+}
+
+function confirmLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    updateAuthLinks();
+    
+    // Hide the modal before redirecting
+    const modal = bootstrap.Modal.getInstance(document.getElementById('logoutConfirmModal'));
+    modal.hide();
+    
+    // Add a slight delay to allow the modal to hide smoothly
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 300);
+}
+
+// Call this when page loads
+document.addEventListener('DOMContentLoaded', updateAuthLinks);
+
 document.addEventListener("DOMContentLoaded", () => {
     const BASE_URL = "https://thrift2.vercel.app/api";
     const socket = io(BASE_URL);
@@ -394,7 +512,7 @@ function setupAuthForms() {
             localStorage.setItem("userId", data.user._id);
 
             console.log("✅ Login Successful! Redirecting...");
-            window.location.href = "dashboard.html";  // ✅ Redirect after successful login
+            window.location.href = "index.html";  // ✅ Redirect after successful login
         } catch (error) {
             console.error("Login Error:", error);
             alert("Error connecting to the server.");
