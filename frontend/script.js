@@ -235,7 +235,7 @@ document.addEventListener("DOMContentLoaded", setupChatPage);
 
         socket.emit("joinRoom", { senderId, receiverId });
 
-        function sendMessage() {
+         function sendMessage() {
             const text = messageInput.value.trim();
             if (!text) return;
 
@@ -695,7 +695,7 @@ function updateUnreadCount() {
 setInterval(updateUnreadCount, 10000);
 
 document.addEventListener("DOMContentLoaded", () => {
-    const BASE_URL = "https://your-marketplace-api.com/api";
+    const BASE_URL = "https://thrift2.vercel.app/api";
     const socket = io(BASE_URL);
     const messageSound = new Audio("message.mp3"); // Add a message sound file
 

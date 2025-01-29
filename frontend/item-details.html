@@ -44,16 +44,15 @@
  <div id="overlay" class="overlay"></div>
     <!-- Item Details 
     <section class="container mt-5" id="itemDetails">-->
-        <section class="container mt-5" id="itemDetails">
+        <div id="overlay" class="overlay"></div>
+<section class="container mt-5" id="itemDetails">
     <div class="row">
         <div class="col-md-6">
             <img id="itemImage" src="" class="img-fluid rounded shadow-sm" alt="Item Image">
         </div>
         <div class="col-md-6">
-            <!-- Match the navbar-brand styling for consistency -->
-            <h2 id="username" class="text-primary"></h2>
+            <!-- Remove the duplicate username ID -->
             <h2 id="itemName" class="text-primary"></h2>
-            <!-- Match navbar-light theme colors -->
             <p class="text-muted">
                 <strong>Price:</strong> 
                 <span id="itemPrice"></span>
@@ -66,7 +65,7 @@
                 <strong>Category:</strong> 
                 <span id="itemCategory"></span>
             </p>
-            <div id="sellerDetails"></div>
+            <div id="sellerDetails" class="mb-3"></div>
             <button id="chatWithSeller" class="btn btn-success mt-3">Chat with Seller</button>
         </div>
     </div>
@@ -76,74 +75,203 @@
     </section>-->
 
     <script>
+    const currencySymbol = {
+    'NGN': '₦',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'KES': 'KSh',
+    'ZAR': 'R',
+    'AED': 'د.إ',
+    'GHS': '₵',
+    'XAF': 'CFA',
+    'XOF': 'CFA'
+};
+
+// Currency to locale mapping
+const currencyLocale = {
+    'NGN': 'en-NG',
+    'USD': 'en-US',
+    'EUR': 'de-DE',
+    'GBP': 'en-GB',
+    'KES': 'en-KE',
+    'ZAR': 'en-ZA',
+    'AED': 'ar-AE',
+    'GHS': 'en-GH',
+    'XAF': 'fr-CM',
+    'XOF': 'fr-SN'
+};
     function setupItemDetailsPage() {
     const params = new URLSearchParams(window.location.search);
     const itemId = params.get("id");
 
     if (!itemId) {
-        alert("Invalid item ID.");
-        console.log("Current URL:", window.location.href);
-        window.location.href = "index.html";
+        showError("Invalid item ID");
+        setTimeout(() => window.location.href = "index.html", 2000);
         return;
     }
 
-    console.log("Fetching item from:", `${BASE_URL}/items/${itemId}`);
+    // Get elements
+    const elements = {
+        itemName: document.getElementById("itemName"),
+        itemPrice: document.getElementById("itemPrice"),
+        itemImage: document.getElementById("itemImage"),
+        itemLocation: document.getElementById("itemLocation"),
+        itemCategory: document.getElementById("itemCategory"),
+        sellerDetails: document.getElementById("sellerDetails"),
+        chatButton: document.getElementById("chatWithSeller")
+    };
 
+    // Verify all elements exist
+    for (const [key, element] of Object.entries(elements)) {
+        if (!element) {
+            console.error(`Missing element: ${key}`);
+            showError("Page layout error");
+            return;
+        }
+    }
+
+    // Fetch item details
     fetch(`${BASE_URL}/items/${itemId}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Failed to fetch: ${response.statusText}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            console.log("Fetched item:", data);
-
-            // Ensure the response contains `item`
+            console.log("Fetched data:", data); // Debug log
+            
             if (!data.success || !data.item) {
-                alert("Item not found.");
-                window.location.href = "index.html";
-                return;
+                throw new Error("Item not found");
             }
 
-            const item = data.item; // Extract the item object
-
-            // Get elements safely
-            const itemName = document.getElementById("itemName");
-            const itemPrice = document.getElementById("itemPrice");
-            const itemImage = document.getElementById("itemImage");
-            const itemLocation = document.getElementById("itemLocation");
-            const itemCategory = document.getElementById("itemCategory");
-            const sellerDetails = document.getElementById("sellerDetails");
-            const chatButton = document.getElementById("chatWithSeller");
-
-            if (!itemName || !itemPrice || !itemImage || !itemLocation || !itemCategory || !sellerDetails || !chatButton) {
-                console.error("❌ One or more elements are missing in the HTML.");
-                return;
-            }
-
-            // Update the UI
-            itemName.textContent = item.name;
-            itemPrice.textContent = item.price;
-            itemImage.src = item.imageUrl;
-            itemLocation.textContent = item.location;
-            itemCategory.textContent = item.category;
-
-            if (item.anonymous) {
-                sellerDetails.innerHTML = "<p>Seller: Anonymous</p>";
-            } else {
-                sellerDetails.innerHTML = `<p>Seller: ${item.seller.username}</p>`;
-            }
-
-            // Attach chat button event
-            chatButton.addEventListener("click", () => startChat(item.seller._id, item.anonymous));
+            displayItemDetails(data.item, elements);
         })
         .catch(error => {
-            console.error("❌ Error fetching item:", error);
-            
+            console.error("Error:", error);
+            showError(error.message);
         });
 }
 
+function displayItemDetails(item, elements) {
+    try {
+        // Format price
+        const symbol = currencySymbol[item.currency] || '₦';
+        const locale = currencyLocale[item.currency] || 'en-NG';
+        const formattedPrice = new Intl.NumberFormat(locale, {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 0
+        }).format(item.price);
+
+        // Update UI elements
+        elements.itemName.textContent = item.name;
+        elements.itemPrice.textContent = `${symbol}${formattedPrice}`;
+        elements.itemImage.src = item.imageUrl;
+        elements.itemLocation.textContent = item.location || 'Location not specified';
+        elements.itemCategory.textContent = item.category || 'Category not specified';
+
+        // Handle seller details
+        displaySellerDetails(item, elements.sellerDetails);
+
+        // Setup chat button
+        setupChatButton(item, elements.chatButton);
+
+    } catch (error) {
+        console.error("Error displaying item details:", error);
+        showError("Error displaying item details");
+    }
+}
+
+function displaySellerDetails(item, sellerDetailsElement) {
+    try {
+        if (item.anonymous) {
+            sellerDetailsElement.innerHTML = `
+                <p class="text-danger">
+                    <strong>Seller:</strong> Anonymous
+                </p>`;
+        } else if (item.seller && item.seller.username) {
+            sellerDetailsElement.innerHTML = `
+                <p class="text-primary">
+                    <strong>Seller:</strong> ${item.seller.username}
+                </p>`;
+        } else {
+            throw new Error('Seller data is incomplete');
+        }
+    } catch (error) {
+        console.error("Error displaying seller details:", error);
+        sellerDetailsElement.innerHTML = `
+            <p class="text-muted">
+                <strong>Seller:</strong> Information unavailable
+            </p>`;
+    }
+}
+
+function setupChatButton(item, chatButton) {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        chatButton.addEventListener('click', () => {
+            window.location.href = 'login.html';
+        });
+        chatButton.textContent = 'Login to Chat';
+        return;
+    }
+
+    chatButton.addEventListener('click', () => {
+       /** if (item.anonymous) {
+            showError("Cannot chat with anonymous sellers");
+            return;
+        }**/
+        
+        // Debug log to see the item structure
+        console.log("Item data in setupChatButton:", item);
+        
+        // Check if seller ID exists in different possible locations
+        const sellerId = item.postedBy
+        //item.seller?.userId || item.seller?._id || item.sellerId || item.userId;
+        
+        if (!sellerId) {
+            showError("Seller information is not available");
+            return;
+        }
+        
+        startChat(sellerId);
+    });
+}
+
+function startChat(sellerId) {
+    if (!sellerId) {
+        showError("Cannot start chat: Seller ID is missing");
+        return;
+    }
+
+    console.log("Starting chat with seller:", sellerId);
+    
+    // Store the current item page URL to return after login
+    localStorage.setItem('returnToURL', window.location.href);
+    
+    // Redirect to chat page with seller ID
+    window.location.href = `messages.html?seller=${sellerId}`;
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+    errorDiv.role = 'alert';
+    errorDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    document.body.insertBefore(errorDiv, document.body.firstChild);
+
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+// Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", setupItemDetailsPage);
     </script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
