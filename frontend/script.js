@@ -246,6 +246,13 @@ function setupAuthForms() {
         const formData = new FormData(registerForm);
         const formObject = Object.fromEntries(formData.entries());
 
+        console.log("🔍 Form Data as Object:", JSON.stringify(formObject, null, 2)); // ✅ Now prints readable JSON
+
+        if (!formObject.username || !formObject.email || !formObject.password) {  
+            alert("All fields are required!");  
+            return;
+        }
+
         if (formObject.password !== formObject.confirmPassword) {
             alert("Passwords do not match!");
             return;
@@ -258,10 +265,10 @@ function setupAuthForms() {
                 body: JSON.stringify(formObject),
             });
 
-            const text = await response.text();  // ✅ Read raw response before JSON parsing
+            const text = await response.text();
             console.log("Raw API Response:", text);
 
-            const data = JSON.parse(text);  // ✅ Now parse JSON safely
+            const data = JSON.parse(text);
             console.log("Parsed JSON Response:", data);
 
             if (data.success) {
@@ -343,6 +350,7 @@ function setupAuthForms() {
             alert("Failed to fetch profile.");
         });
     }**/
+    
 
     function setupItemPosting() {
         const postItemForm = document.getElementById("postItemForm");
