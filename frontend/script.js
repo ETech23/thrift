@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function setupFeaturedListings() {
     const featuredListings = document.getElementById("featuredListings");
 
-    fetch(`${BASE_URL}/items?limit=4`)
+    fetch(`${BASE_URL}/items?limit=6`)
         .then(response => response.json())
         .then(data => {
             console.log("🔍 Full API Response:", JSON.stringify(data, null, 2));  // ✅ Debug full response
@@ -70,32 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     'XAF': 'CFA',
     'XOF': 'CFA'
 };
-/**
-featuredListings.innerHTML = "";
-data.items.forEach(item => {
-    // Get the correct currency symbol based on item's currency, default to ₦ if not found
-    const symbol = currencySymbol[item.currency] || '₦';
-    
-    const card = document.createElement("div");
-    card.className = "col-md-4 mb-4";
-    card.innerHTML = `
-        <div class="card shadow-sm">
-            <img src="${item.imageUrl}" class="card-img-top" alt="${item.name}">
-            <div class="card-body">
-                <h5 class="card-title text-primary">${item.name}</h5>
-                <p class="text-muted">
-                    <strong>${symbol}${item.price}</strong>
-                </p>
-                <p class="text-muted">
-                    <strong>${""}</strong> ${item.location || ''}
-                </p>
-                <p class="text-sm ${item.anonymous ? 'text-danger' : 'text-muted'}">
-                    ${item.anonymous ? 'Anonymous' : 'Verified Seller'}
-                </p>
-                <a href="item-details.html?id=${item._id}" class="btn btn-primary w-100">View Item</a>
-            </div>
-        </div>
-    `;**/
+
 
 featuredListings.innerHTML = "";
 data.items.forEach(item => {
@@ -134,16 +109,66 @@ data.items.forEach(item => {
         });
 }
 
+    // Keep your existing currencySymbol object
+const currencySymbol = {
+    'NGN': '₦',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'KES': 'KSh',
+    'ZAR': 'R',
+    'AED': 'د.إ',
+    'GHS': '₵',
+    'XAF': 'CFA',
+    'XOF': 'CFA'
+};
+
+function setupPriceInput() {
+    const currencySelect = document.getElementById('itemCurrency');
+    const currencySymbolSpan = document.getElementById('currencySymbol');
+    const priceInput = document.getElementById('itemPrice');
+
+    // Update currency symbol when currency changes
+    currencySelect.addEventListener('change', (e) => {
+        const selectedCurrency = e.target.value;
+        currencySymbolSpan.textContent = currencySymbol[selectedCurrency] || '₦';
+    });
+
+    // Optional: Format price as user types
+    priceInput.addEventListener('input', (e) => {
+        const value = e.target.value;
+        // Remove non-numeric characters except decimal point
+        const numericValue = value.replace(/[^\d.]/g, '');
+        // Ensure only one decimal point
+        const parts = numericValue.split('.');
+        if (parts.length > 2) {
+            e.target.value = parts[0] + '.' + parts.slice(1).join('');
+        }
+    });
+}
+
+// Modify your existing setupItemPostForm to include the price input setup
 async function setupItemPostForm() {
     const postItemForm = document.getElementById("postItemForm");
+    
+    // Setup price input handling
+    setupPriceInput();
 
     if (postItemForm) {
         postItemForm.addEventListener("submit", async (event) => {
             event.preventDefault();
 
+            // Validate price
+            const price = document.getElementById("itemPrice").value;
+            const numericPrice = parseFloat(price);
+            if (isNaN(numericPrice) || numericPrice <= 0) {
+                showNotification("Please enter a valid price", "error");
+                return;
+            }
+
             const formData = new FormData();
             formData.append("name", document.getElementById("itemName").value);
-            formData.append("price", document.getElementById("itemPrice").value);
+            formData.append("price", numericPrice);
             formData.append("category", document.getElementById("itemCategory").value);
             formData.append("location", document.getElementById("itemLocation").value);
             formData.append("currency", document.getElementById("itemCurrency").value);
@@ -163,17 +188,19 @@ async function setupItemPostForm() {
                 const response = await fetch(`${BASE_URL}/items/create`, {
                     method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${token}` // ✅ Ensure token is passed
+                        "Authorization": `Bearer ${token}`
                     },
                     body: formData
                 });
 
                 const result = await response.json();
-                console.log("✅ API Response:", JSON.stringify(result, null, 2)); // ✅ Log full response
+                console.log("✅ API Response:", JSON.stringify(result, null, 2));
 
                 if (result.success) {
                     showNotification("Item posted successfully!", "success");
                     postItemForm.reset();
+                    // Reset currency symbol to default after form reset
+                    document.getElementById('currencySymbol').textContent = '₦';
                 } else {
                     showNotification(result.message || "Failed to post item", "error");
                 }
@@ -184,6 +211,9 @@ async function setupItemPostForm() {
         });
     }
 }
+    
+
+    
     function setupChatPage() {
     const params = new URLSearchParams(window.location.search);
     const chatId = params.get("chatId");
