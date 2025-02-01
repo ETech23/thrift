@@ -38,78 +38,443 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function setupFeaturedListings() {
-    const featuredListings = document.getElementById("featuredListings");
+ 
 
-    fetch(`${BASE_URL}/items?limit=6`)
+function setupFeaturedListings() {
+    const featuredListings = document.getElementById("featuredListings");
+    const itemsPerPage = 6;
+    let currentPage = 0;
+    let allItems = [];
+    let filteredItems = [];
+
+    // Create search container
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'search-container mb-4';
+    searchContainer.innerHTML = `
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <input 
+                type="text" 
+                id="titleSearch" 
+                class="px-4 py-2 rounded shadow-lg flex-grow-1" 
+                placeholder="Search by title..."
+            >
+            <select 
+                id="categoryFilter" 
+                class="px-4 py-2 rounded shadow-lg"
+            >
+                <option value="" >All Categories</option>
+            </select>
+            <select 
+                id="locationFilter" 
+                class="px-4 py-2 rounded shadow-lg"
+            >
+                <option value="">All Locations</option>
+            </select>
+            <button 
+                id="searchButton"
+                class="bg-secondary text-white px-6 py-2 rounded shadow-lg"
+            >
+                Search
+            </button>
+        </div>
+    `;
+    
+    // Insert search container before the featuredListings
+    featuredListings.parentNode.insertBefore(searchContainer, featuredListings);
+
+    // Add the existing styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .nav-arrow {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            z-index: 10;
+        }
+        
+    
+        .nav-arrow:hover {
+            background-color: rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: scale(1.05);
+        }
+        
+        .nav-arrow svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .listing-content {
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            flex-grow: 1;
+        }
+
+        .listing-title {
+            margin-bottom: 4px !important;
+        }
+
+        .listing-price {
+            margin-bottom: 2px !important;
+        }
+
+        .listing-location {
+            margin-bottom: 2px !important;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .listing-seller-status {
+            margin-bottom: 8px !important;
+            font-size: 12px;
+        }
+        
+        .search-container input,
+        .search-container select {
+            border: 1px solid #ddd;
+            min-width: 150px;
+        }
+        
+        .search-container button:hover {
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 480px) {
+            .nav-arrow {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .nav-arrow svg {
+                width: 18px;
+                height: 18px;
+            }
+            
+    #titleSearch {
+            max-width: 50px;
+    }
+            #featuredListings {
+                grid-template-columns: repeat(2, 1fr);
+                display: grid;
+                gap: 8px;
+                padding: 4px;
+                justify-content: center;
+                align-items: start;
+                justify-items: center;
+                margin-left: 2px;
+            }
+
+            #featuredListings img {
+                height: 150px;
+                width: 100%;
+                object-fit: cover;
+            }
+
+            #featuredListings .listing-content {
+                text-align: left;
+                padding: 8px 4px;
+            }
+
+            #featuredListings .listing-title {
+                font-size: 12px;
+                margin-bottom: -20px !important;
+                line-height: 1.2;
+                height: 32px;
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+
+            #featuredListings .listing-price {
+                font-size: 12px;
+                margin-top: -22px !important;
+            }
+
+            #featuredListings .listing-location {
+                margin-bottom: 45px !important;
+            font-size: 14px !important;
+            }
+
+            #featuredListings .listing-seller-status {
+                margin-top: 60px !important;
+            font-size: 12px;
+        text-align: left !important;
+        
+            }
+
+            #featuredListings .btn-sm {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            
+            .search-container {
+                padding: 0 8px;
+            }
+            
+            .search-container input,
+            .search-container select,
+            .search-container button {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+        }
+            /* Desktop and Tablet Styles */
+        @media (min-width: 481px) {
+            #featuredListings {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+                padding: 8px;
+                justify-content: center;
+                align-items: start;
+            }
+
+            /* Larger screens */
+            @media (min-width: 1200px) {
+                #featuredListings {
+                    grid-template-columns: repeat(4, 1fr);
+                }
+            }
+
+            /* Even larger screens */
+            @media (min-width: 1600px) {
+                #featuredListings {
+                    grid-template-columns: repeat(6, 1fr);
+                }
+            }
+        }
+
+        .listing-content {
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            flex-grow: 1;
+        }
+
+        .listing-title {
+            font-size: 14px !important;
+            margin-bottom: -15px !important;
+        }
+
+        .listing-price {
+            margin-top: -25px !important;
+            text-align: center !important;
+        }
+
+        .listing-location {
+            margin-bottom: 40px !important;
+            font-size: 14px !important;
+            color: #666;
+            text-align: center !important;
+        }
+
+        .status {
+            margin-top: 50px !important;
+            font-size: 12px;
+            text-align: left !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Create container with relative positioning
+    const containerDiv = document.createElement("div");
+    containerDiv.className = "position-relative";
+    
+    featuredListings.appendChild(containerDiv);
+
+    // Modern arrow SVGs
+    const arrowSVGs = {
+        prev: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+               </svg>`,
+        next: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+               </svg>`
+    };
+
+    // Create navigation arrows
+    const createNavArrow = (direction) => {
+        const arrow = document.createElement("button");
+        arrow.className = `nav-arrow position-absolute top-50 translate-middle-y ${direction === 'prev' ? 'start-0' : 'end-0'}`;
+        arrow.innerHTML = direction === 'prev' ? arrowSVGs.prev : arrowSVGs.next;
+        arrow.style.marginLeft = direction === 'prev' ? '-15px' : '';
+        arrow.style.marginRight = direction === 'prev' ? '' : '-15px';
+        return arrow;
+    };
+
+    const prevButton = createNavArrow('prev');
+    const nextButton = createNavArrow('next');
+    containerDiv.appendChild(prevButton);
+    containerDiv.appendChild(nextButton);
+
+    const currencySymbol = {
+        'NGN': '₦',
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'KES': 'KSh',
+        'ZAR': 'R',
+        'AED': 'د.إ',
+        'GHS': '₵',
+        'XAF': 'CFA',
+        'XOF': 'CFA'
+    };
+
+    function filterItems() {
+        const titleSearch = document.getElementById('titleSearch').value.toLowerCase();
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const locationFilter = document.getElementById('locationFilter').value;
+
+        filteredItems = allItems.filter(item => {
+            const titleMatch = item.name.toLowerCase().includes(titleSearch);
+            const categoryMatch = !categoryFilter || item.category === categoryFilter;
+            const locationMatch = !locationFilter || item.location === locationFilter;
+            return titleMatch && categoryMatch && locationMatch;
+        });
+
+        currentPage = 0;
+        renderItems(filteredItems, currentPage);
+    }
+
+    const renderItems = (items, page) => {
+        const start = page * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageItems = items.slice(start, end);
+
+        featuredListings.innerHTML = "";
+        
+        if (items.length === 0) {
+            featuredListings.innerHTML = "<p class='text-center text-danger'>No items found matching your search criteria.</p>";
+            return;
+        }
+
+        pageItems.forEach(item => {
+            const symbol = currencySymbol[item.currency] || '₦';
+            const formattedPrice = new Intl.NumberFormat('en-US').format(item.price);
+            
+            const card = document.createElement("div");
+            card.className = "listing-item";
+            card.innerHTML = `
+                <div class="card shadow-sm">
+                    <img src="${item.imageUrl}" class="card-img-top" alt="${item.name}">
+                    <div class="listing-content">
+                        <h5 class="listing-title text-primary">${item.name}</h5>
+                        <p class="listing-price text-muted">
+                            <strong>${symbol}${formattedPrice}</strong>
+                        </p>
+                        <p class="listing-location">
+                            ${item.location || ''}
+                        </p>
+                        <p class="listing-seller-status ${item.anonymous ? 'text-danger' : 'text-muted'}">
+                            ${item.anonymous ? 'Anonymous' : 'Verified Seller'}
+                        </p>
+                        <a href="item-details.html?id=${item._id}" class="btn btn-primary btn-sm mt-auto">View</a>
+                    </div>
+                </div>
+            `;
+            featuredListings.appendChild(card);
+        });
+
+        // Reappend the navigation after rendering items
+        containerDiv.appendChild(prevButton);
+        containerDiv.appendChild(nextButton);
+
+        // Update button visibility
+        prevButton.style.display = page === 0 ? 'none' : 'flex';
+        nextButton.style.display = end >= items.length ? 'none' : 'flex';
+    };
+
+    // Add event listeners for search
+    document.getElementById('searchButton').addEventListener('click', filterItems);
+    document.getElementById('titleSearch').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') filterItems();
+    });
+    document.getElementById('categoryFilter').addEventListener('change', filterItems);
+    document.getElementById('locationFilter').addEventListener('change', filterItems);
+
+    // Add click handlers for navigation
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 0) {
+            currentPage--;
+            renderItems(filteredItems, currentPage);
+        }
+    });
+
+    nextButton.addEventListener('click', () => {
+        if ((currentPage + 1) * itemsPerPage < filteredItems.length) {
+            currentPage++;
+            renderItems(filteredItems, currentPage);
+        }
+    });
+
+    // Initial fetch
+    fetch(`${BASE_URL}/items`)
         .then(response => response.json())
         .then(data => {
-            console.log("🔍 Full API Response:", JSON.stringify(data, null, 2));  // ✅ Debug full response
-
-            if (!data || typeof data !== "object") {
+            if (!data || !data.items || !Array.isArray(data.items)) {
                 console.error("❌ Invalid API response format:", data);
                 featuredListings.innerHTML = "<p class='text-danger'>Invalid API response.</p>";
                 return;
             }
 
-            if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
-                console.warn("⚠ No valid items returned from API");
-                featuredListings.innerHTML = "<p class='text-danger'>No featured listings available.</p>";
-                return;
-            }
+            allItems = data.items;
+            filteredItems = allItems;
 
-                     const currencySymbol = {
-    'NGN': '₦',
-    'USD': '$',
-    'EUR': '€',
-    'GBP': '£',
-    'KES': 'KSh',
-    'ZAR': 'R',
-    'AED': 'د.إ',
-    'GHS': '₵',
-    'XAF': 'CFA',
-    'XOF': 'CFA'
-};
+            // Populate category and location filters
+            const categories = [...new Set(allItems.map(item => item.category).filter(Boolean))];
+            const locations = [...new Set(allItems.map(item => item.location).filter(Boolean))];
 
+            const categorySelect = document.getElementById('categoryFilter');
+            const locationSelect = document.getElementById('locationFilter');
 
-featuredListings.innerHTML = "";
-data.items.forEach(item => {
-    const symbol = currencySymbol[item.currency] || '₦';
-    
-    // Format the price with thousand separators
-    const formattedPrice = new Intl.NumberFormat('en-US').format(item.price);
-    
-    const card = document.createElement("div");
-    card.className = "col-md-4 mb-4";
-    card.innerHTML = `
-        <div class="card shadow-sm">
-            <img src="${item.imageUrl}" class="card-img-top" alt="${item.name}">
-            <div class="card-body">
-                <h5 class="card-title text-primary">${item.name}</h5>
-                <p class="text-muted">
-                    <strong>${symbol}${formattedPrice}</strong>
-                </p>
-                <p class="text-muted">
-                    <strong>${""}</strong> ${item.location || ''}
-                </p>
-                <p class="text-sm ${item.anonymous ? 'text-danger' : 'text-muted'}">
-                    ${item.anonymous ? 'Anonymous' : 'Verified Seller'}
-                </p>
-                <a href="item-details.html?id=${item._id}" class="btn btn-primary w-100">View Item</a>
-            </div>
-        </div>
-    `;
-
-                featuredListings.appendChild(card);
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
             });
+
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationSelect.appendChild(option);
+            });
+
+            renderItems(allItems, currentPage);
         })
         .catch(error => {
             console.error("❌ Error fetching items:", error);
             featuredListings.innerHTML = "<p class='text-danger'>Failed to load featured listings.</p>";
         });
 }
+// Call this function after your existing setupFeaturedListings()
 
-    // Keep your existing currencySymbol object
+    
+      /**  .catch(error => {
+            console.error("❌ Error fetching items:", error);
+            featuredListings.innerHTML = "<p class='text-danger'>Failed to load featured listings.</p>";
+        });**/
+
+        
+                     
+
+ /**   // Keep your existing currencySymbol object
 const currencySymbol = {
     'NGN': '₦',
     'USD': '$',
@@ -121,7 +486,7 @@ const currencySymbol = {
     'GHS': '₵',
     'XAF': 'CFA',
     'XOF': 'CFA'
-};
+};**/
 
 function setupPriceInput() {
     const currencySelect = document.getElementById('itemCurrency');
@@ -352,6 +717,7 @@ document.addEventListener("DOMContentLoaded", setupChatPage);
     setupDarkMode();
     setupMobileMenu();
     setupFeaturedListings();
+    setupSearch();
     setupItemPostForm();
     setupChatMessaging();
     setupCurrencyUpdate();
@@ -606,8 +972,7 @@ function setupAuthForms() {
             });
         }
     }
-
-    function setupViewItemDetails() {
+function setupViewItemDetails() {
         const urlParams = new URLSearchParams(window.location.search);
         const itemId = urlParams.get("id");
 
@@ -662,8 +1027,7 @@ recordButton.addEventListener("mousedown", async () => {
         audioChunks.push(event.data);
     };
 });
-
-recordButton.addEventListener("mouseup", () => {
+        recordButton.addEventListener("mouseup", () => {
     mediaRecorder.stop();
     mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: "audio/wav" });

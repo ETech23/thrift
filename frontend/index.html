@@ -7,6 +7,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="light-mode">
@@ -58,10 +61,11 @@
     <header class="bg-primary text-white text-center py-12">
         <h1 class="text-4xl font-bold">Buy & Sell Used Items</h1>
         <p class="mt-2 text-lg">List your items or find great deals near you.</p>
-        <div class="mt-4">
+        <!-- <div class="mt-4">
             <input type="text" class="px-4 py-2 rounded shadow-lg w-1/2 text-gray-800" placeholder="Search items...">
             <button class="bg-secondary text-white px-6 py-2 rounded shadow-lg ml-2">Search</button>
-        </div>
+        </div>-->
+        
     </header>
     
       <!-- Featured Listings -->
@@ -72,7 +76,7 @@
             <!-- Items will be loaded dynamically -->
             
         </div>
-        
+        <div id="paginationControls" class="pagination-container"></div>
     </section>
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
