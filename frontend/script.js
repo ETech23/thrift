@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const BASE_URL = "https://afrimart-zbj3.onrender.com/api/";
+    const BASE_URL = "https://afrimart-zbj3.onrender.com/api";
     const socket = io(BASE_URL);
 
     // Dark Mode Management
@@ -843,98 +843,105 @@ document.addEventListener("DOMContentLoaded", () => {
 
     
 
-document.addEventListener("DOMContentLoaded", () => {
-    setupAuthForms();
-});
+
+
 
 function setupAuthForms() {
     const registerForm = document.getElementById("registerForm");
     const loginForm = document.getElementById("loginForm");
 
+    // Handle Registration Form Submission
     if (registerForm) {
-    registerForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const formData = new FormData(registerForm);
-        const formObject = Object.fromEntries(formData.entries());
+        registerForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-        console.log("🔍 Form Data as Object:", JSON.stringify(formObject, null, 2)); // ✅ Now prints readable JSON
+            const formData = new FormData(registerForm);
+            const formObject = Object.fromEntries(formData.entries());
 
-        if (!formObject.username || !formObject.email || !formObject.password) {  
-            alert("All fields are required!");  
-            return;
-        }
+            // Logging form data for debugging
+            console.log("Form Data:", JSON.stringify(formObject, null, 2));
 
-        if (formObject.password !== formObject.confirmPassword) {
-            alert("Passwords do not match!");
-            return;
-        }
-
-        try {
-            const response = await fetch(`${BASE_URL}/users/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formObject),
-            });
-
-            const text = await response.text();
-            console.log("Raw API Response:", text);
-
-            const data = JSON.parse(text);
-            console.log("Parsed JSON Response:", data);
-
-            if (data.success) {
-                alert("Registration successful! Please login.");
-                window.location.href = "login.html";
-            } else {
-                alert(data.message || "Registration failed.");
+            // Validation
+            if (!formObject.username || !formObject.email || !formObject.password || !formObject.confirmPassword) {
+                alert("All fields are required!");
+                return;
             }
-        } catch (error) {
-            alert("Error connecting to the server.");
-            console.error("Registration Error:", error);
-        }
-    });
-}
 
-    if (loginForm) {
+            if (formObject.password !== formObject.confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/users/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formObject),
+                });
+
+                const data = await response.json();
+                console.log("Registration Response:", JSON.stringify(data, null, 2));
+
+                if (data.success) {
+                    alert("Registration successful! Please login.");
+                    window.location.href = "login.html"; // Redirect to login page
+                } else {
+                    alert(data.message || "Registration failed.");
+                }
+            } catch (error) {
+                console.error("Registration Error:", error);
+                alert("Error connecting to the server.");
+            }
+        });
+    }
+
+    // Handle Login Form Submission
+if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
+
         const formData = new FormData(loginForm);
         const formObject = Object.fromEntries(formData.entries());
 
         try {
-            const response = await fetch(`${BASE_URL}/users/login`, {
+            const response = await fetch(`https://afrimart-zbj3.onrender.com/api/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formObject),
             });
 
             const data = await response.json();
-            console.log("Login API Response:", JSON.stringify(data, null, 2));  // ✅ Fix: Display JSON properly
+            console.log("Raw Login Response:", data); // Log raw response
 
-            if (!data.success) {
-                console.error("Login Failed - API Response:", data);
-                alert(data.message || "Login failed.");
-                return;
+            if (response.ok) {
+                // Check if response has required data
+                if (!data.success) {
+                    console.error("Login Failed - API Response:", data);
+                    alert(data.message || "Login failed.");
+                    return;
+                }
+
+                if (!data.token) {
+                    console.error("Login Failed - Token Missing:", data);
+                    alert("Token missing. Login failed.");
+                    return;
+                }
+
+                if (!data.user || !data.user._id) {
+                    console.error("Login Failed - User ID Missing:", data);
+                    alert("User ID missing. Login failed.");
+                    return;
+                }
+
+                // Store token and user info in localStorage
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("userId", data.user._id);
+
+                console.log("Login Successful! Redirecting...");
+                window.location.href = "index.html";  // Redirect to homepage after successful login
+            } else {
+                alert("Failed to log in. Please try again.");
             }
-
-            if (!data.token) {
-                console.error("Login Failed - Token Missing:", data);
-                alert("Token missing. Login failed.");
-                return;
-            }
-
-            if (!data.user || !data.user._id) {
-                console.error("Login Failed - User ID Missing:", data);
-                alert("User ID missing. Login failed.");
-                return;
-            }
-
-            console.log("✅ Storing Token in LocalStorage...");
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("userId", data.user._id);
-
-            console.log("✅ Login Successful! Redirecting...");
-            window.location.href = "index.html";  // ✅ Redirect after successful login
         } catch (error) {
             console.error("Login Error:", error);
             alert("Error connecting to the server.");
@@ -942,6 +949,9 @@ function setupAuthForms() {
     });
 }
 }
+
+// Initialize the forms on page load
+document.addEventListener("DOMContentLoaded", setupAuthForms);
 
     /**function setupUserDashboard() {
         const token = localStorage.getItem("token");
@@ -1091,28 +1101,7 @@ recordButton.addEventListener("mousedown", async () => {
     //setupRealTimeChat();
 });
 
-const BASE_URL = "https://thrift2.vercel.app/api";
-    const socket = io(BASE_URL);
 
-function updateUnreadCount() {
-    const userId = localStorage.getItem("userId");
-
-    fetch(`${BASE_URL}/chat/unread/${userId}`)
-        .then(response => response.json())
-        .then(data => {
-            const unreadCount = data.unread;
-            const messagesMenu = document.getElementById("messagesMenu");
-            if (unreadCount > 0) {
-                messagesMenu.textContent = `Messages (${unreadCount})`;
-            } else {
-                messagesMenu.textContent = "Messages";
-            }
-        })
-        .catch(error => console.error("Error fetching unread messages:", error));
-}
-
-// Call this function every 10 seconds
-setInterval(updateUnreadCount, 10000);
 
 document.addEventListener("DOMContentLoaded", () => {
     const BASE_URL = "https://thrift2.vercel.app/api";
