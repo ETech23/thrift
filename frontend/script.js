@@ -868,41 +868,27 @@ if (loginForm) {
 
             console.log("Full Response:", response);
 
-            // Read response text for better debugging
-            const responseText = await response.text();
-            console.log("Raw Response Text:", responseText);
-
-            // Try to parse JSON (if it's valid JSON)
-            let data;
-            try {
-                data = JSON.parse(responseText);
-            } catch (jsonError) {
-                console.error("JSON Parse Error:", jsonError);
-                alert("Invalid server response.");
+            if (!response.ok) {
+                console.error("Server Response Error:", response.status, response.statusText);
+                alert("Failed to log in. Please try again.");
                 return;
             }
 
+            const data = await response.json();
             console.log("Parsed JSON Response:", data);
 
-            if (response.ok) {
-                if (!data.token) {
-                    console.error("Login Failed - Token Missing:", data);
-                    alert("Token missing. Login failed.");
-                    return;
-                }
-
+            if (data.token) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("userId", data.user._id);
-
                 console.log("Login Successful! Redirecting...");
-                window.location.href = "index.html";  
+                window.location.href = "index.html";
             } else {
-                console.error("Login Failed - Response Not OK:", response.status, data);
-                alert(data.message || "Failed to log in. Please try again.");
+                console.error("Login Failed - Missing Token:", data);
+                alert("Login failed: " + (data.message || "Unknown error."));
             }
         } catch (error) {
             console.error("Fetch Error:", error);
-            alert("Error connecting to the server.");
+            alert("Network error or CORS issue. Check browser console.");
         }
     });
 }
