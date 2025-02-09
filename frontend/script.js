@@ -904,46 +904,48 @@ if (loginForm) {
         const formObject = Object.fromEntries(formData.entries());
 
         try {
-            const response = await fetch(`https://afrimart-zbj3.onrender.com/api/users/login`, {
+            const response = await fetch(`${BASE_URL}/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formObject),
             });
 
-            const data = await response.json();
-            console.log("Raw Login Response:", data); // Log raw response
+            console.log("Full Response:", response);
+
+            // Read response text for better debugging
+            const responseText = await response.text();
+            console.log("Raw Response Text:", responseText);
+
+            // Try to parse JSON (if it's valid JSON)
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (jsonError) {
+                console.error("JSON Parse Error:", jsonError);
+                alert("Invalid server response.");
+                return;
+            }
+
+            console.log("Parsed JSON Response:", data);
 
             if (response.ok) {
-                // Check if response has required data
-                if (!data.success) {
-                    console.error("Login Failed - API Response:", data);
-                    alert(data.message || "Login failed.");
-                    return;
-                }
-
                 if (!data.token) {
                     console.error("Login Failed - Token Missing:", data);
                     alert("Token missing. Login failed.");
                     return;
                 }
 
-                if (!data.user || !data.user._id) {
-                    console.error("Login Failed - User ID Missing:", data);
-                    alert("User ID missing. Login failed.");
-                    return;
-                }
-
-                // Store token and user info in localStorage
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("userId", data.user._id);
 
                 console.log("Login Successful! Redirecting...");
-                window.location.href = "index.html";  // Redirect to homepage after successful login
+                window.location.href = "index.html";  
             } else {
-                alert("Failed to log in. Please try again.");
+                console.error("Login Failed - Response Not OK:", response.status, data);
+                alert(data.message || "Failed to log in. Please try again.");
             }
         } catch (error) {
-            console.error("Login Error:", error);
+            console.error("Fetch Error:", error);
             alert("Error connecting to the server.");
         }
     });
