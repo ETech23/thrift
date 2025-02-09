@@ -644,53 +644,9 @@ function sendMessage() {
 
 document.addEventListener("DOMContentLoaded", setupChatPage);
     
-    // Real-time Chat Setup
-    function setupChatMessaging() {
-        const chatMessages = document.getElementById("chatMessages");
-        const messageInput = document.getElementById("messageInput");
-        const sendMessageButton = document.getElementById("sendMessage");
 
-        const senderId = localStorage.getItem("userId");
-        const receiverId = localStorage.getItem("chatReceiver");
 
-        socket.emit("joinRoom", { senderId, receiverId });
-
-         function sendMessage() {
-            const text = messageInput.value.trim();
-            if (!text) return;
-
-            socket.emit("sendMessage", { senderId, receiverId, text });
-            messageInput.value = "";
-        }
-
-        socket.on("receiveMessage", (message) => {
-    const messageDiv = document.createElement("div");
-    messageDiv.className = `message ${message.sender === senderId ? "sent" : "received"}`;
-    messageDiv.innerHTML = `${message.text} <span class="status">${message.read ? "Seen" : "Delivered"}</span>`;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    // Mark message as read
-    if (message.sender !== senderId) {
-        socket.emit("markAsRead", { messageId: message._id });
-    }
-});
         
-        socket.on("receiveMessage", (message) => {
-            const messageDiv = document.createElement("div");
-            messageDiv.className = `message ${message.sender === senderId ? "sent" : "received"}`;
-            messageDiv.textContent = message.text;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        });
-
-        if (sendMessageButton) {
-            sendMessageButton.addEventListener("click", sendMessage);
-            messageInput.addEventListener("keypress", (e) => {
-                if (e.key === "Enter") sendMessage();
-            });
-        }
-    }
 
     function showNotification(message, type = "info") {
         const notification = document.createElement("div");
@@ -735,7 +691,7 @@ document.addEventListener("DOMContentLoaded", setupChatPage);
     setupFeaturedListings();
     //setupSearch();
     setupItemPostForm();
-    setupChatMessaging();
+    
     setupCurrencyUpdate();
     
 
@@ -1104,61 +1060,3 @@ recordButton.addEventListener("mousedown", async () => {
 });
 
 
-
-document.addEventListener("DOMContentLoaded", () => {
-    const BASE_URL = "https://thrift2.vercel.app/api";
-    const socket = io(BASE_URL);
-    const messageSound = new Audio("message.mp3"); // Add a message sound file
-
-    function setupRealTimeChat() {
-        const chatMessages = document.getElementById("chatMessages");
-        const messageInput = document.getElementById("messageInput");
-        const sendMessageButton = document.getElementById("sendMessage");
-
-        const senderId = localStorage.getItem("userId");
-        const receiverId = localStorage.getItem("chatReceiver");
-
-        socket.emit("joinRoom", { senderId, receiverId });
-
-        function sendMessage() {
-            const text = messageInput.value.trim();
-            if (!text) return;
-
-            socket.emit("sendMessage", { senderId, receiverId, text });
-            messageInput.value = "";
-        }
-
-        socket.on("receiveMessage", (message) => {
-            const messageDiv = document.createElement("div");
-            messageDiv.className = `message ${message.sender === senderId ? "sent" : "received"}`;
-            messageDiv.textContent = message.text;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            // Play sound alert
-            messageSound.play();
-
-            // Push Notification - Check Permission
-            if ("Notification" in window) {
-                if (Notification.permission === "granted") {
-                    new Notification("New Message", { body: message.text });
-                } else if (Notification.permission !== "denied") {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === "granted") {
-                            new Notification("New Message", { body: message.text });
-                        }
-                    });
-                }
-            }
-        });
-
-        if (sendMessageButton) {
-            sendMessageButton.addEventListener("click", sendMessage);
-            messageInput.addEventListener("keypress", (e) => {
-                if (e.key === "Enter") sendMessage();
-            });
-        }
-    }
-
-    setupRealTimeChat();
-});
