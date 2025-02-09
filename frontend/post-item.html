@@ -36,78 +36,276 @@
     </ul>
 </div>
     <div class="container mt-5 p-4 bg-white shadow rounded form-container">
-        <h2 class="text-2xl font-bold text-primary text-center">Post Your Item</h2>
+ <!-- HTML Form -->
+<h2 class="text-2xl font-bold text-primary text-center">Post Your Item</h2>
 
-        <form id="postItemForm" class="mt-4">
-            <!-- Item Name -->
-            <label class="form-label">Item Name</label>
-            <input type="text" id="itemName" class="form-control" placeholder="Enter item name" required>
-<!-- Location -->
-<div class="row mt-3">
-    <div class="col-12">
-        <label class="form-label">Location</label>
-        <input type="text" id="itemLocation" class="form-control" placeholder="Enter item location" required>
-    </div>
-</div>
- <!-- Price -->
-<div class="row">
-    <div class="col-4">
-        <label class="form-label mt-3">Currency</label>
-        <select id="itemCurrency" class="form-control" required>
-            <option value="NGN">₦ Naira (NGN)</option>
-            <option value="USD">$ US Dollar (USD)</option>
-            <option value="EUR">€ Euro (EUR)</option>
-            <option value="GBP">£ British Pound (GBP)</option>
-            <option value="KES">KSh Kenyan Shilling (KES)</option>
-            <option value="ZAR">R South African Rand (ZAR)</option>
-            <option value="AED">د.إ UAE Dirham (AED)</option>
-            <option value="GHS">₵ Ghanaian Cedi (GHS)</option>
-            <option value="XAF">CFA Central African Franc (XAF)</option>
-            <option value="XOF">CFA West African Franc (XOF)</option>
-        </select>
-    </div>
-    <div class="col-8">
-        <label class="form-label mt-3">Price</label>
-        <div class="input-group">
-            <span class="input-group-text" id="currencySymbol">₦</span>
-            <input type="number" 
-                   id="itemPrice" 
-                   class="form-control" 
-                   placeholder="Enter price" 
-                   required
-                   min="0"
-                   step="0.01"
-                   aria-label="Price amount"
-                   aria-describedby="currencySymbol">
+<form id="postItemForm" class="mt-4">
+    <!-- Item Name -->
+    <label class="form-label">Item Name</label>
+    <input type="text" id="itemName" class="form-control" placeholder="Enter item name" required>
+
+    <!-- Location -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <label class="form-label">Location</label>
+            <input type="text" id="itemLocation" class="form-control" placeholder="Enter item location" required>
         </div>
-        <div class="form-text" id="pricePreview"></div>
     </div>
-</div>
 
-            <!-- Category -->
-            <label class="form-label mt-3">Category</label>
-            <select id="itemCategory" class="form-control">
-                <option value="">All Categories</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Furniture">Furniture</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Others">Others</option>
+    <!-- Price -->
+    <div class="row">
+        <div class="col-4">
+            <label class="form-label mt-3">Currency</label>
+            <select id="itemCurrency" class="form-control" required>
+                <option value="NGN">₦ Naira (NGN)</option>
+                <option value="USD">$ US Dollar (USD)</option>
+                <option value="EUR">€ Euro (EUR)</option>
+                <option value="GBP">£ British Pound (GBP)</option>
+                <option value="KES">KSh Kenyan Shilling (KES)</option>
+                <option value="ZAR">R South African Rand (ZAR)</option>
+                <option value="AED">د.إ UAE Dirham (AED)</option>
+                <option value="GHS">₵ Ghanaian Cedi (GHS)</option>
+                <option value="XAF">CFA Central African Franc (XAF)</option>
+                <option value="XOF">CFA West African Franc (XOF)</option>
             </select>
-
-            <!-- Upload Images -->
-            <label class="form-label mt-3">Upload Images</label>
-            <input type="file" id="itemImage" class="form-control" accept="image/*" required>
-            <img id="previewImage" class="img-thumbnail mt-3 d-none" width="150">
-
-            <!-- Anonymous Mode -->
-            <div class="form-check mt-4">
-                <input class="form-check-input" type="checkbox" id="anonymousToggle">
-                <label class="form-check-label">Post Anonymously</label>
+        </div>
+        <div class="col-8">
+            <label class="form-label mt-3">Price</label>
+            <div class="input-group">
+                <span class="input-group-text" id="currencySymbol">₦</span>
+                <input type="number" 
+                       id="itemPrice" 
+                       class="form-control" 
+                       placeholder="Enter price" 
+                       required
+                       min="0"
+                       step="0.01"
+                       aria-label="Price amount"
+                       aria-describedby="currencySymbol">
             </div>
+            <div class="form-text" id="pricePreview"></div>
+        </div>
+    </div>
 
-            <!-- Submit Button -->
-            <button type="submit" class="btn btn-primary w-100 mt-4">Post Item</button>
-        </form>
+    <!-- Category -->
+    <label class="form-label mt-3">Category</label>
+    <select id="itemCategory" class="form-control" required>
+        <option value="">Select a Category</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Furniture">Furniture</option>
+        <option value="Clothing">Clothing</option>
+        <option value="Others">Others</option>
+    </select>
+
+    <!-- Upload Images -->
+    <label class="form-label mt-3">Upload Images</label>
+    <input type="file" id="itemImage" class="form-control" accept="image/*" required>
+    <img id="previewImage" class="img-thumbnail mt-3 d-none" width="150">
+
+    <!-- Anonymous Mode -->
+    <div class="form-check mt-4">
+        <input class="form-check-input" type="checkbox" id="anonymousToggle">
+        <label class="form-check-label">Post Anonymously</label>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary w-100 mt-4">Post Item</button>
+</form>
+
+<!-- JavaScript Code -->
+<script>
+        const BASE_URL = "https://thrift2.vercel.app"
+// Currency symbols mapping
+const currencySymbol = {
+    'NGN': '₦',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'KES': 'KSh',
+    'ZAR': 'R',
+    'AED': 'د.إ',
+    'GHS': '₵',
+    'XAF': 'CFA',
+    'XOF': 'CFA'
+};
+
+// Image preview function
+function setupImagePreview() {
+    const imageInput = document.getElementById('itemImage');
+    const previewImage = document.getElementById('previewImage');
+
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewImage.classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewImage.classList.add('d-none');
+        }
+    });
+}
+
+function setupPriceInput() {
+    const currencySelect = document.getElementById('itemCurrency');
+    const currencySymbolSpan = document.getElementById('currencySymbol');
+    const priceInput = document.getElementById('itemPrice');
+    const pricePreview = document.getElementById('pricePreview');
+
+    // Set initial currency symbol
+    currencySymbolSpan.textContent = currencySymbol[currencySelect.value];
+
+    // Update currency symbol when currency changes
+    currencySelect.addEventListener('change', (e) => {
+        const selectedCurrency = e.target.value;
+        currencySymbolSpan.textContent = currencySymbol[selectedCurrency];
+    });
+
+    // Format price preview as user types
+    priceInput.addEventListener('input', (e) => {
+        const value = e.target.value;
+        if (value) {
+            const formattedPrice = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currencySelect.value
+            }).format(value);
+            pricePreview.textContent = `Formatted: ${formattedPrice}`;
+        } else {
+            pricePreview.textContent = '';
+        }
+    });
+}
+
+function validateForm() {
+    const requiredFields = {
+        'itemName': 'Item name',
+        'itemPrice': 'Price',
+        'itemCategory': 'Category',
+        'itemLocation': 'Location',
+        'itemImage': 'Image'
+    };
+
+    for (const [fieldId, fieldName] of Object.entries(requiredFields)) {
+        const field = document.getElementById(fieldId);
+        if (!field.value) {
+            showNotification(`Please provide the ${fieldName}`, "error");
+            field.focus();
+            return false;
+        }
+    }
+
+    // Validate price
+    const price = parseFloat(document.getElementById("itemPrice").value);
+    if (isNaN(price) || price <= 0) {
+        showNotification("Please enter a valid price greater than 0", "error");
+        return false;
+    }
+
+    // Validate image
+    const imageFile = document.getElementById("itemImage").files[0];
+    if (!imageFile) {
+        showNotification("Please select an image", "error");
+        return false;
+    }
+
+    // Validate image type
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!validImageTypes.includes(imageFile.type)) {
+        showNotification("Please select a valid image file (JPEG, PNG, or GIF)", "error");
+        return false;
+    }
+
+    return true;
+}
+
+async function setupItemPostForm() {
+    const postItemForm = document.getElementById("postItemForm");
+    
+    // Setup all form features
+    setupPriceInput();
+    setupImagePreview();
+
+    if (postItemForm) {
+        postItemForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            if (!validateForm()) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("name", document.getElementById("itemName").value.trim());
+            formData.append("price", parseFloat(document.getElementById("itemPrice").value));
+            formData.append("category", document.getElementById("itemCategory").value);
+            formData.append("location", document.getElementById("itemLocation").value.trim());
+            formData.append("currency", document.getElementById("itemCurrency").value);
+            formData.append("anonymous", document.getElementById("anonymousToggle").checked);
+            formData.append("image", document.getElementById("itemImage").files[0]);
+
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    showNotification("You must be logged in to post an item", "error");
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                const response = await fetch(`${BASE_URL}/items/create`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification("Item posted successfully!", "success");
+                    postItemForm.reset();
+                    document.getElementById('previewImage').classList.add('d-none');
+                    document.getElementById('currencySymbol').textContent = '₦';
+                    document.getElementById('pricePreview').textContent = '';
+                } else {
+                    throw new Error(result.message || "Failed to post item");
+                }
+            } catch (error) {
+                console.error("❌ Error:", error);
+                showNotification(error.message || "An error occurred while posting the item", "error");
+            }
+        });
+    }
+}
+
+            function showNotification(message, type = "info") {
+        const notification = document.createElement("div");
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.classList.add("show");
+            setTimeout(() => {
+                notification.classList.remove("show");
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }, 10);
+    }
+// Initialize the form
+document.addEventListener('DOMContentLoaded', () => {
+    setupItemPostForm();
+});
+</script>
 
         
         <!--<button id="darkModeToggle" class="btn btn-secondary mt-3">Toggle Dark Mode</button>-->

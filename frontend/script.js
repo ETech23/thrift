@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const BASE_URL = "https://thrift2.vercel.app/api";
+    const BASE_URL = "https://afrimart-zbj3.onrender.com/api/";
     const socket = io(BASE_URL);
 
     // Dark Mode Management
@@ -42,10 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function setupFeaturedListings() {
     const featuredListings = document.getElementById("featuredListings");
-    const itemsPerPage = 6;
-    let currentPage = 0;
+    const itemsPerPage = 20; // Number of items to load at a time
     let allItems = [];
     let filteredItems = [];
+    let currentIndex = 0;
 
     // Create search container
     const searchContainer = document.createElement('div');
@@ -56,7 +56,7 @@ function setupFeaturedListings() {
                 type="text" 
                 id="titleSearch" 
                 class="px-4 py-2 rounded shadow-lg flex-grow-1" 
-                placeholder="Search by title..."
+                placeholder="Search by title, location, or category..."
             >
             <select 
                 id="categoryFilter" 
@@ -82,7 +82,7 @@ function setupFeaturedListings() {
     // Insert search container before the featuredListings
     featuredListings.parentNode.insertBefore(searchContainer, featuredListings);
 
-    // Add the existing styles
+    // Add the existing styles (unchanged)
     const style = document.createElement('style');
     style.textContent = `
         .nav-arrow {
@@ -288,39 +288,9 @@ function setupFeaturedListings() {
             font-size: 12px;
             text-align: left !important;
         }
+
     `;
     document.head.appendChild(style);
-
-    // Create container with relative positioning
-    const containerDiv = document.createElement("div");
-    containerDiv.className = "position-relative";
-    
-    featuredListings.appendChild(containerDiv);
-
-    // Modern arrow SVGs
-    const arrowSVGs = {
-        prev: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-               </svg>`,
-        next: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-               </svg>`
-    };
-
-    // Create navigation arrows
-    const createNavArrow = (direction) => {
-        const arrow = document.createElement("button");
-        arrow.className = `nav-arrow position-absolute top-50 translate-middle-y ${direction === 'prev' ? 'start-0' : 'end-0'}`;
-        arrow.innerHTML = direction === 'prev' ? arrowSVGs.prev : arrowSVGs.next;
-        arrow.style.marginLeft = direction === 'prev' ? '-15px' : '';
-        arrow.style.marginRight = direction === 'prev' ? '' : '-15px';
-        return arrow;
-    };
-
-    const prevButton = createNavArrow('prev');
-    const nextButton = createNavArrow('next');
-    containerDiv.appendChild(prevButton);
-    containerDiv.appendChild(nextButton);
 
     const currencySymbol = {
         'NGN': '₦',
@@ -336,34 +306,39 @@ function setupFeaturedListings() {
     };
 
     function filterItems() {
-        const titleSearch = document.getElementById('titleSearch').value.toLowerCase();
+        const searchQuery = document.getElementById('titleSearch').value.toLowerCase();
         const categoryFilter = document.getElementById('categoryFilter').value;
         const locationFilter = document.getElementById('locationFilter').value;
 
         filteredItems = allItems.filter(item => {
-            const titleMatch = item.name.toLowerCase().includes(titleSearch);
-            const categoryMatch = !categoryFilter || item.category === categoryFilter;
-            const locationMatch = !locationFilter || item.location === locationFilter;
-            return titleMatch && categoryMatch && locationMatch;
+            const matchesSearch = 
+                item.name.toLowerCase().includes(searchQuery) ||
+                item.category.toLowerCase().includes(searchQuery) ||
+                item.location.toLowerCase().includes(searchQuery);
+
+            const matchesCategory = !categoryFilter || item.category === categoryFilter;
+            const matchesLocation = !locationFilter || item.location === locationFilter;
+
+            return matchesSearch && matchesCategory && matchesLocation;
         });
 
-        currentPage = 0;
-        renderItems(filteredItems, currentPage);
+        currentIndex = 0;
+        featuredListings.innerHTML = ""; // Clear existing items
+        loadMoreItems();
     }
 
-    const renderItems = (items, page) => {
-        const start = page * itemsPerPage;
-        const end = start + itemsPerPage;
-        const pageItems = items.slice(start, end);
+    function loadMoreItems() {
+        const itemsToLoad = filteredItems.slice(currentIndex, currentIndex + itemsPerPage);
+        currentIndex += itemsPerPage;
 
-        featuredListings.innerHTML = "";
-        
-        if (items.length === 0) {
-            featuredListings.innerHTML = "<p class='text-center text-danger'>No items found matching your search criteria.</p>";
+        if (itemsToLoad.length === 0) {
+            if (currentIndex === itemsPerPage) {
+                featuredListings.innerHTML = "<p class='text-center text-danger'>No items found matching your search criteria.</p>";
+            }
             return;
         }
 
-        pageItems.forEach(item => {
+        itemsToLoad.forEach(item => {
             const symbol = currencySymbol[item.currency] || '₦';
             const formattedPrice = new Intl.NumberFormat('en-US').format(item.price);
             
@@ -389,15 +364,7 @@ function setupFeaturedListings() {
             `;
             featuredListings.appendChild(card);
         });
-
-        // Reappend the navigation after rendering items
-        containerDiv.appendChild(prevButton);
-        containerDiv.appendChild(nextButton);
-
-        // Update button visibility
-        prevButton.style.display = page === 0 ? 'none' : 'flex';
-        nextButton.style.display = end >= items.length ? 'none' : 'flex';
-    };
+    }
 
     // Add event listeners for search
     document.getElementById('searchButton').addEventListener('click', filterItems);
@@ -407,18 +374,10 @@ function setupFeaturedListings() {
     document.getElementById('categoryFilter').addEventListener('change', filterItems);
     document.getElementById('locationFilter').addEventListener('change', filterItems);
 
-    // Add click handlers for navigation
-    prevButton.addEventListener('click', () => {
-        if (currentPage > 0) {
-            currentPage--;
-            renderItems(filteredItems, currentPage);
-        }
-    });
-
-    nextButton.addEventListener('click', () => {
-        if ((currentPage + 1) * itemsPerPage < filteredItems.length) {
-            currentPage++;
-            renderItems(filteredItems, currentPage);
+    // Infinite scroll
+    window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+            loadMoreItems();
         }
     });
 
@@ -432,7 +391,7 @@ function setupFeaturedListings() {
                 return;
             }
 
-            allItems = data.items;
+            allItems = data.items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by most recent
             filteredItems = allItems;
 
             // Populate category and location filters
@@ -456,7 +415,7 @@ function setupFeaturedListings() {
                 locationSelect.appendChild(option);
             });
 
-            renderItems(allItems, currentPage);
+            loadMoreItems(); // Initial load
         })
         .catch(error => {
             console.error("❌ Error fetching items:", error);
@@ -488,10 +447,21 @@ const currencySymbol = {
     'XOF': 'CFA'
 };**/
 
+// Define currency symbols
+const currencySymbol = {
+    'NGN': '₦',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£'
+};
+
 function setupPriceInput() {
     const currencySelect = document.getElementById('itemCurrency');
     const currencySymbolSpan = document.getElementById('currencySymbol');
     const priceInput = document.getElementById('itemPrice');
+
+    // Set default currency symbol
+    currencySymbolSpan.textContent = currencySymbol[currencySelect.value] || '₦';
 
     // Update currency symbol when currency changes
     currencySelect.addEventListener('change', (e) => {
@@ -499,20 +469,67 @@ function setupPriceInput() {
         currencySymbolSpan.textContent = currencySymbol[selectedCurrency] || '₦';
     });
 
-    // Optional: Format price as user types
+    // Format price as user types
     priceInput.addEventListener('input', (e) => {
-        const value = e.target.value;
+        let value = e.target.value;
         // Remove non-numeric characters except decimal point
-        const numericValue = value.replace(/[^\d.]/g, '');
+        value = value.replace(/[^\d.]/g, '');
         // Ensure only one decimal point
-        const parts = numericValue.split('.');
+        const parts = value.split('.');
         if (parts.length > 2) {
-            e.target.value = parts[0] + '.' + parts.slice(1).join('');
+            value = parts[0] + '.' + parts.slice(1).join('');
         }
+        // Limit to two decimal places
+        if (parts[1] && parts[1].length > 2) {
+            value = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+        e.target.value = value;
     });
 }
 
-// Modify your existing setupItemPostForm to include the price input setup
+function validateForm() {
+    const requiredFields = {
+        'itemName': 'Item name',
+        'itemPrice': 'Price',
+        'itemCategory': 'Category',
+        'itemLocation': 'Location',
+        'itemCurrency': 'Currency',
+        'itemImage': 'Image'
+    };
+
+    for (const [fieldId, fieldName] of Object.entries(requiredFields)) {
+        const field = document.getElementById(fieldId);
+        if (!field.value) {
+            showNotification(`Please provide the ${fieldName}`, "error");
+            field.focus();
+            return false;
+        }
+    }
+
+    // Validate price
+    const price = parseFloat(document.getElementById("itemPrice").value);
+    if (isNaN(price) || price <= 0) {
+        showNotification("Please enter a valid price greater than 0", "error");
+        return false;
+    }
+
+    // Validate image
+    const imageFile = document.getElementById("itemImage").files[0];
+    if (!imageFile) {
+        showNotification("Please select an image", "error");
+        return false;
+    }
+
+    // Validate image type
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!validImageTypes.includes(imageFile.type)) {
+        showNotification("Please select a valid image file (JPEG, PNG, or GIF)", "error");
+        return false;
+    }
+
+    return true;
+}
+
 async function setupItemPostForm() {
     const postItemForm = document.getElementById("postItemForm");
     
@@ -523,17 +540,13 @@ async function setupItemPostForm() {
         postItemForm.addEventListener("submit", async (event) => {
             event.preventDefault();
 
-            // Validate price
-            const price = document.getElementById("itemPrice").value;
-            const numericPrice = parseFloat(price);
-            if (isNaN(numericPrice) || numericPrice <= 0) {
-                showNotification("Please enter a valid price", "error");
+            if (!validateForm()) {
                 return;
             }
 
             const formData = new FormData();
-            formData.append("name", document.getElementById("itemName").value);
-            formData.append("price", numericPrice);
+            formData.append("name", document.getElementById("itemName").value.trim());
+            formData.append("price", parseFloat(document.getElementById("itemPrice").value));
             formData.append("category", document.getElementById("itemCategory").value);
             formData.append("location", document.getElementById("itemLocation").value);
             formData.append("currency", document.getElementById("itemCurrency").value);
@@ -543,7 +556,7 @@ async function setupItemPostForm() {
             try {
                 const token = localStorage.getItem("token");
                 if (!token) {
-                    alert("You must be logged in to post an item.");
+                    showNotification("You must be logged in to post an item", "error");
                     window.location.href = "login.html";
                     return;
                 }
@@ -558,20 +571,23 @@ async function setupItemPostForm() {
                     body: formData
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
                 console.log("✅ API Response:", JSON.stringify(result, null, 2));
 
                 if (result.success) {
                     showNotification("Item posted successfully!", "success");
                     postItemForm.reset();
-                    // Reset currency symbol to default after form reset
                     document.getElementById('currencySymbol').textContent = '₦';
                 } else {
-                    showNotification(result.message || "Failed to post item", "error");
+                    throw new Error(result.message || "Failed to post item");
                 }
             } catch (error) {
                 console.error("❌ Error:", error);
-                showNotification("An error occurred", "error");
+                showNotification(error.message || "An error occurred while posting the item", "error");
             }
         });
     }
@@ -717,10 +733,11 @@ document.addEventListener("DOMContentLoaded", setupChatPage);
     setupDarkMode();
     setupMobileMenu();
     setupFeaturedListings();
-    setupSearch();
+    //setupSearch();
     setupItemPostForm();
     setupChatMessaging();
     setupCurrencyUpdate();
+    
 
     window.addEventListener("error", (event) => {
         showNotification(`An error occurred: ${event.message}`, "error");
@@ -853,7 +870,7 @@ function setupAuthForms() {
         }
 
         try {
-            const response = await fetch(`${BASE_URL}/register`, {
+            const response = await fetch(`${BASE_URL}/users/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formObject),
@@ -885,7 +902,7 @@ function setupAuthForms() {
         const formObject = Object.fromEntries(formData.entries());
 
         try {
-            const response = await fetch(`${BASE_URL}/login`, {
+            const response = await fetch(`${BASE_URL}/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formObject),
@@ -948,7 +965,7 @@ function setupAuthForms() {
 
             
 
-    function setupItemPosting() {
+   /**  function setupItemPosting() {
         const postItemForm = document.getElementById("postItemForm");
         if (postItemForm) {
             postItemForm.addEventListener("submit", async (e) => {
@@ -988,9 +1005,9 @@ function setupViewItemDetails() {
                 })
                 .catch(() => console.log("Failed to load item details."));
         }
-    }
+    }**/
 
-    function setupRealTimeChat() {
+   /** function setupRealTimeChat() {
         const chatMessages = document.getElementById("chatMessages");
         const messageInput = document.getElementById("messageInput");
         const sendMessageButton = document.getElementById("sendMessage");
@@ -1065,13 +1082,13 @@ recordButton.addEventListener("mousedown", async () => {
                 if (e.key === "Enter") sendMessage();
             });
         }
-    }
+    }**/
     
     setupAuthForms();
     //setupUserDashboard();
-    setupItemPosting();
-    setupViewItemDetails();
-    setupRealTimeChat();
+    //setupItemPosting();
+    //setupViewItemDetails();
+    //setupRealTimeChat();
 });
 
 const BASE_URL = "https://thrift2.vercel.app/api";
