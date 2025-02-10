@@ -852,7 +852,7 @@ function setupAuthForms() {
     }
 
     // Handle Login Form Submission
-if (loginForm) {
+    if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -860,11 +860,102 @@ if (loginForm) {
         const formObject = Object.fromEntries(formData.entries());
 
         try {
-            const response = await fetch(`${BASE_URL}/users/login`, {
+            const response = await fetch(`https://afrimart-zbj3.onrender.com/api/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formObject),
             });
+
+            console.log("🟢 Full Response:", response);
+
+            const data = await response.json();
+            console.log("🟢 Parsed JSON Response:", data);
+
+            if (!response.ok) {
+                console.error("❌ Login Failed:", data.message);
+                alert("Login failed: " + (data.message || "Unknown error."));
+                return;
+            }
+
+            if (data.token && data.user) {
+                console.log("🟢 Token:", data.token);
+                console.log("🟢 User ID:", data.user._id);
+
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("userId", data.user._id);
+                
+                console.log("✅ Login Successful! Redirecting...");
+                window.location.href = "index.html";
+            } else {
+                console.error("❌ Login Failed - Invalid Response Structure:", data);
+                alert("Login failed: Invalid server response.");
+            }
+        } catch (error) {
+            console.error("🔥 Fetch Error:", error);
+            alert("Network error or CORS issue. Check browser console.");
+        }
+    });
+}
+   /** if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(loginForm);
+        const formObject = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(`https://afrimart-zbj3.onrender.com/api/users/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formObject),
+            });
+
+            console.log("🟢 Full Response:", response);
+
+            if (!response.ok) {
+                console.error("❌ Server Response Error:", response.status, response.statusText);
+                alert("Failed to log in. Please try again.");
+                return;
+            }
+
+            const data = await response.json();
+            console.log("🟢 Parsed JSON Response:", data);
+
+            if (data.token && data.user) {
+                console.log("🟢 Token:", data.token);
+                console.log("🟢 User ID:", data.user._id);
+
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("userId", data.user._id);
+                
+                console.log("✅ Login Successful! Redirecting...");
+                window.location.href = "index.html";
+            } else {
+                console.error("❌ Login Failed - Invalid Response Structure:", data);
+                alert("Login failed: " + (data.message || "Unknown error."));
+            }
+        } catch (error) {
+            console.error("🔥 Fetch Error:", error);
+            alert("Network error or CORS issue. Check browser console.");
+        }
+    });
+}**/
+/**if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(loginForm);
+        const formObject = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(`https://afrimart-zbj3.onrender.com/api/users/login`, {
+    method: "POST",
+    headers: { 
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"  // 🚀 Prevent caching
+    },
+    body: JSON.stringify(formObject),
+});
 
             console.log("Full Response:", response);
 
@@ -877,21 +968,21 @@ if (loginForm) {
             const data = await response.json();
             console.log("Parsed JSON Response:", data);
 
-            if (data.token) {
+            if (data.token && data.user) {
                 localStorage.setItem("token", data.token);
-                localStorage.setItem("userId", data.user._id);
-                console.log("Login Successful! Redirecting...");
-                window.location.href = "index.html";
-            } else {
-                console.error("Login Failed - Missing Token:", data);
-                alert("Login failed: " + (data.message || "Unknown error."));
-            }
+    localStorage.setItem("userId", data.user._id);
+    console.log("Login Successful! Redirecting...");
+    window.location.href = "index.html";
+} else {
+    console.error("Login Failed - Invalid Response Structure:", data);
+    alert("Login failed: " + (data.message || "Unknown error."));
+}
         } catch (error) {
             console.error("Fetch Error:", error);
             alert("Network error or CORS issue. Check browser console.");
         }
     });
-}
+}**/
 }
 
 // Initialize the forms on page load
