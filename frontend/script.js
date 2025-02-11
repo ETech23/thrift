@@ -778,78 +778,58 @@ document.addEventListener("DOMContentLoaded", () => {
     const BASE_URL = "https://thrift2.vercel.app/api";
     const socket = io(BASE_URL);
 
-   /** function setupDarkMode() {
-    const darkModeToggle = document.getElementById("darkModeToggle");
-    console.log("Dark Mode status:", localStorage.getItem("darkMode"));
-
-    if (localStorage.getItem("darkMode") === "enabled") {
-        document.body.classList.add("dark-mode");
-    }
-
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener("click", () => {
-            console.log("Button clicked!");
-            document.body.classList.toggle("dark-mode");
-            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode") ? "enabled" : "disabled");
-        });
-    }
-}
-**/
-
-
-    
-
-
-
-
 function setupAuthForms() {
     const registerForm = document.getElementById("registerForm");
     const loginForm = document.getElementById("loginForm");
 
     // Handle Registration Form Submission
-    if (registerForm) {
-        registerForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
+ if (registerForm) {
+    registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-            const formData = new FormData(registerForm);
-            const formObject = Object.fromEntries(formData.entries());
+        const formData = new FormData(registerForm);
+        const formObject = {
+            name: formData.get("username"), // Ensure correct field mapping
+            email: formData.get("email"),
+            password: formData.get("password"),
+            confirmPassword: formData.get("confirmPassword"),
+        };
 
-            // Logging form data for debugging
-            console.log("Form Data:", JSON.stringify(formObject, null, 2));
+        console.log("Form Data:", JSON.stringify(formObject, null, 2));
 
-            // Validation
-            if (!formObject.username || !formObject.email || !formObject.password || !formObject.confirmPassword) {
-                alert("All fields are required!");
-                return;
+        // Validation
+        if (!formObject.name || !formObject.email || !formObject.password || !formObject.confirmPassword) {
+            alert("All fields are required!");
+            return;
+        }
+
+        if (formObject.password !== formObject.confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
+
+        try {
+            const response = await fetch("https://afrimart-zbj3.onrender.com/api/users/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formObject),
+            });
+
+            const data = await response.json();
+            console.log("Registration Response:", JSON.stringify(data, null, 2));
+
+            if (data.success) {
+                alert(data.message);  // Display success message
+                window.location.href = "login.html"; // Redirect to login page
+            } else {
+                alert(data.error || "Registration failed.");  // Display error message from backend
             }
-
-            if (formObject.password !== formObject.confirmPassword) {
-                alert("Passwords do not match!");
-                return;
-            }
-
-            try {
-                const response = await fetch(`${BASE_URL}/users/register`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formObject),
-                });
-
-                const data = await response.json();
-                console.log("Registration Response:", JSON.stringify(data, null, 2));
-
-                if (data.success) {
-                    alert("Registration successful! Please login.");
-                    window.location.href = "login.html"; // Redirect to login page
-                } else {
-                    alert(data.message || "Registration failed.");
-                }
-            } catch (error) {
-                console.error("Registration Error:", error);
-                alert("Error connecting to the server.");
-            }
-        });
-    }
+        } catch (error) {
+            console.error("Registration Error:", error);
+            alert("Error connecting to the server.");
+        }
+    });
+}
 
     // Handle Login Form Submission
     if (loginForm) {
