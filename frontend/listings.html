@@ -76,21 +76,460 @@
 
     <!-- Display Posted Items -->
     <div id="postedItems" class="space-y-4"></div>
+          <!-- Collapsible Section -->
+      <div id="collapsibleSection" class="hidden p-6 border-t">
+        <!-- Description -->
+        <div class="mt-4">
+          <p class="text-gray-600">
+            Perfectly maintained iPhone 13 Pro Max. Comes with original accessories and box. Battery health at 92%. No scratches or dents.
+          </p>
+        </div>
+
+        <!-- Tabs for Payment and Delivery -->
+        <div class="mt-6 space-y-4">
+          <!-- Tab Buttons -->
+          <div class="grid grid-cols-2 gap-2">
+            <button id="paymentTab" class="p-2 bg-gray-200 rounded-lg">Payment Methods</button>
+            <button id="deliveryTab" class="p-2 bg-gray-200 rounded-lg">Delivery Options</button>
+          </div>
+
+          <!-- Payment Methods -->
+          <div id="paymentContent" class="space-y-2">
+            <button class="w-full p-2 border rounded-lg text-left flex items-center">
+              <span class="mr-2">💵</span> Cash on Delivery
+            </button>
+            <button class="w-full p-2 border rounded-lg text-left flex items-center">
+              <span class="mr-2">🏦</span> Bank Transfer
+            </button>
+            <button class="w-full p-2 border rounded-lg text-left flex items-center">
+              <span class="mr-2">📱</span> USSD Transfer
+            </button>
+            <button class="w-full p-2 border rounded-lg text-left flex items-center">
+              <span class="mr-2">💳</span> Paystack
+            </button>
+            <button class="w-full p-2 border rounded-lg text-left flex items-center">
+              <span class="mr-2">💳</span> Flutterwave
+            </button>
+          </div>
+
+          <!-- Delivery Options -->
+          <div id="deliveryContent" class="hidden space-y-2">
+            <button class="w-full p-2 border rounded-lg text-left flex items-center justify-between">
+              <span class="flex items-center">
+                <span class="mr-2">🏪</span> Pickup
+              </span>
+              <span>₦0</span>
+            </button>
+            <button class="w-full p-2 border rounded-lg text-left flex items-center justify-between">
+              <span class="flex items-center">
+                <span class="mr-2">🚛</span> Standard Delivery
+              </span>
+              <span>₦2,000</span>
+            </button>
+            <button class="w-full p-2 border rounded-lg text-left flex items-center justify-between">
+              <span class="flex items-center">
+                <span class="mr-2">🚚</span> Express Delivery
+              </span>
+              <span>₦5,000</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex space-x-4">
+          <button id="makeOfferButton" class="flex-1 bg-green-600 text-white p-2 rounded-lg hover:bg-green-700">Make Offer</button>
+          <button id="chatButton" class="flex-1 border p-2 rounded-lg flex items-center justify-center">
+            <i data-lucide="message-circle" class="w-4 h-4 mr-2"></i> Chat
+          </button>
+          <button id="shareButton" class="border p-2 rounded-lg">
+            <i data-lucide="share-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
   </div>
+</div>
+  </div>
+<script>
+const formatCurrency = (amount, currency) => {
+  const symbols = {
+    NGN: '₦',
+    USD: '$',
+    GBP: '£',
+    KES: 'KSh',
+    GHS: '₵',
+    ZAR: 'R',
+    XAF: 'FCFA',
+    XOF: 'CFA',
+    ETB: 'Br',
+    EGP: '£'
+  };
+  return `${symbols[currency] || ''}${parseFloat(amount).toLocaleString()}`;
+};
 
-  <!-- JavaScript for Interactivity -->
-<script type="module">
-    import { createIcons, icons } from 'https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js';
+const searchItems = (items, searchTerm) => {
+  if (!searchTerm) return items;
+  
+  searchTerm = searchTerm.toLowerCase().trim();
+  return items.filter(item => {
+    return (
+      item.name?.toLowerCase().includes(searchTerm) ||
+      item.category?.toLowerCase().includes(searchTerm) ||
+      item.location?.toLowerCase().includes(searchTerm) ||
+      item.user?.name?.toLowerCase().includes(searchTerm)
+    );
+  });
+};
 
-    createIcons({
-        icons: icons
+function createLoadingSkeleton() {
+  return `
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden animate-pulse">
+      <div class="p-3">
+        <div class="flex items-center space-x-2">
+          <div class="h-10 w-10 rounded-full bg-gray-200"></div>
+          <div class="flex-1">
+            <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div class="h-3 bg-gray-200 rounded w-1/3 mt-2"></div>
+          </div>
+        </div>
+        <div class="mt-2">
+          <div class="h-60 bg-gray-200 rounded-lg"></div>
+        </div>
+        <div class="mt-2">
+          <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/4 mt-1"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+const fetchItems = async (searchQuery = '') => {
+  const container = document.getElementById('postedItems');
+  container.innerHTML = Array(4).fill(createLoadingSkeleton()).join('');
+
+  try {
+    const response = await fetch(`${CONFIG.API_BASE_URL}/items`);
+    if (!response.ok) throw new Error('Failed to fetch items');
+
+    const items = await response.json();
+    const filteredItems = searchItems(items, searchQuery);
+    
+    container.innerHTML = '';
+    
+    if (filteredItems.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8">
+          <i data-lucide="package-search" class="w-16 h-16 mx-auto text-gray-400 mb-4"></i>
+          <p class="text-gray-500">No items found</p>
+        </div>
+      `;
+      lucide.createIcons();
+      return;
+    }
+
+    filteredItems.forEach(item => {
+      container.appendChild(createItemElement(item));
     });
-  </script>
-  <script>
+
+    lucide.createIcons();
+  } catch (error) {
+    console.error('Error fetching items:', error);
+    showNotification('Failed to fetch items. Please try again later.');
+    container.innerHTML = `
+      <div class="text-center py-8">
+        <i data-lucide="alert-triangle" class="w-16 h-16 mx-auto text-red-400 mb-4"></i>
+        <p class="text-gray-500">Failed to load items. Please try again later.</p>
+      </div>
+    `;
+    lucide.createIcons();
+  }
+};
+
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.classList.add('animate-fade-out');
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+function createItemElement(item) {
+  const itemElement = document.createElement('div');
+  itemElement.className = 'max-w-2xl mx-auto p-1';
+  
+  const createImageCarousel = (images) => {
+    if (!images || images.length === 0) {
+      return `
+        <div class="relative h-60">
+          <img src="https://via.placeholder.com/800x600" alt="Placeholder" class="w-full h-60 object-cover rounded-lg">
+        </div>
+      `;
+    }
+
+    const carouselId = `carousel-${Math.random().toString(36).substr(2, 9)}`;
+    
+    return `
+      <div id="${carouselId}" class="relative h-60">
+        ${images.map((img, idx) => `
+          <img src="${img}" 
+               alt="Product Image ${idx + 1}" 
+               class="w-full h-60 object-cover rounded-lg absolute transition-opacity duration-300 ${idx === 0 ? 'opacity-100' : 'opacity-0'}"
+               data-index="${idx}">
+        `).join('')}
+        ${images.length > 1 ? `
+          <button class="carousel-prev absolute left-1 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75 transition-colors">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <button class="carousel-next absolute right-1 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75 transition-colors">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+          <div class="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
+            ${images.map((_, idx) => `
+              <button class="carousel-indicator w-1.5 h-1.5 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition-colors ${idx === 0 ? 'bg-opacity-100' : ''}"
+                      data-index="${idx}"></button>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  };
+
+  itemElement.innerHTML = `
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div class="p-3">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center space-x-2">
+            <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <img src="${item.user?.avatar || 'https://via.placeholder.com/100'}" 
+                   alt="User Avatar" 
+                   class="rounded-full w-full h-full object-cover">
+            </div>
+            <div>
+              <div class="flex items-center">
+                <h2 class="text-lg font-semibold">${item.user?.name || 'Anonymous'}</h2>
+                ${item.user?.verified ? '<i data-lucide="check-circle" class="w-4 h-4 text-blue-500 ml-1"></i>' : ''}
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i data-lucide="map-pin" class="w-3 h-3 mr-1"></i>
+                ${item.location || 'Location not specified'}
+                <i data-lucide="timer" class="w-3 h-3 ml-2 mr-1"></i>
+                ${new Date(item.createdAt).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2">
+          ${createImageCarousel(item.images)}
+        </div>
+
+        <div class="mt-2">
+          <h2 class="text-xl font-semibold">${item.name}</h2>
+          <div class="flex items-center space-x-2 mt-1">
+            <span class="text-xl font-bold text-green-600">${formatCurrency(item.price, item.currency)}</span>
+            <span class="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full text-xs">Negotiable</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="collapsible hidden p-3 border-t">
+        <div class="mt-2">
+          <p class="text-sm text-gray-600">${item.description || 'No description provided'}</p>
+        </div>
+
+        <div class="mt-3 space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <button class="payment-tab p-2 text-sm bg-gray-200 rounded-lg">Payment Methods</button>
+            <button class="delivery-tab p-2 text-sm bg-gray-200 rounded-lg">Delivery Options</button>
+          </div>
+
+          <div class="payment-content space-y-1">
+            ${['Cash on Delivery', 'Bank Transfer', 'USSD Transfer', 'Paystack', 'Flutterwave']
+              .map(method => `
+                <button class="w-full p-2 text-sm border rounded-lg text-left flex items-center justify-between hover:bg-gray-50">
+                  <span class="flex items-center">
+                    <span class="mr-1">${method === 'Cash on Delivery' ? '💵' : 
+                                      method === 'Bank Transfer' ? '🏦' : 
+                                      method === 'USSD Transfer' ? '📱' : '💳'}</span>
+                    ${method}
+                  </span>
+                  <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                </button>
+              `).join('')}
+          </div>
+
+          <div class="delivery-content hidden space-y-1">
+            ${[
+              { name: 'Pickup', price: '0', icon: '🏪' },
+              { name: 'Standard Delivery', price: '2000', icon: '🚛' },
+              { name: 'Express Delivery', price: '5000', icon: '🚚' }
+            ].map(option => `
+                <button class="w-full p-2 text-sm border rounded-lg text-left flex items-center justify-between hover:bg-gray-50">
+                  <span class="flex items-center">
+                    <span class="mr-1">${option.icon}</span>
+                    ${option.name}
+                  </span>
+                  <span>${formatCurrency(option.price, item.currency)}</span>
+                </button>
+              `).join('')}
+          </div>
+        </div>
+
+        <div class="mt-3 flex space-x-2">
+          <button class="make-offer flex-1 bg-green-600 text-white p-2 text-sm rounded-lg hover:bg-green-700">
+            Make Offer
+          </button>
+          <button class="chat flex-1 border p-2 text-sm rounded-lg flex items-center justify-center hover:bg-gray-50">
+            <i data-lucide="message-circle" class="w-3 h-3 mr-1"></i> Chat
+          </button>
+          <button class="share border p-2 rounded-lg hover:bg-gray-50">
+            <i data-lucide="share-2" class="w-3 h-3"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const setupCarousel = () => {
+    if (!item.images?.length) return;
+    
+    const carousel = itemElement.querySelector(`[id^="carousel-"]`);
+    if (!carousel) return;
+
+    const images = carousel.querySelectorAll('img');
+    const prevBtn = carousel.querySelector('.carousel-prev');
+    const nextBtn = carousel.querySelector('.carousel-next');
+    const indicators = carousel.querySelectorAll('.carousel-indicator');
+    let currentIndex = 0;
+
+    const showImage = (index) => {
+      images.forEach(img => img.classList.add('opacity-0'));
+      indicators.forEach(ind => ind.classList.remove('bg-opacity-100'));
+      
+      images[index].classList.remove('opacity-0');
+      indicators[index].classList.add('bg-opacity-100');
+      currentIndex = index;
+    };
+
+    if (prevBtn && nextBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newIndex = (currentIndex - 1 + images.length) % images.length;
+        showImage(newIndex);
+      });
+
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newIndex = (currentIndex + 1) % images.length;
+        showImage(newIndex);
+      });
+    }
+
+    indicators.forEach(indicator => {
+      indicator.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showImage(parseInt(indicator.dataset.index));
+      });
+    });
+  };
+
+  const setupEventListeners = () => {
+    const container = itemElement.querySelector('.bg-white');
+    const collapsible = itemElement.querySelector('.collapsible');
+    const paymentTab = itemElement.querySelector('.payment-tab');
+    const deliveryTab = itemElement.querySelector('.delivery-tab');
+    const paymentContent = itemElement.querySelector('.payment-content');
+    const deliveryContent = itemElement.querySelector('.delivery-content');
+
+    container.addEventListener('click', (e) => {
+      if (!e.target.closest('button')) {
+        collapsible.classList.toggle('hidden');
+      }
+    });
+
+    paymentTab.addEventListener('click', (e) => {
+      e.stopPropagation();
+      paymentContent.classList.remove('hidden');
+      deliveryContent.classList.add('hidden');
+      paymentTab.classList.add('bg-gray-300');
+      deliveryTab.classList.remove('bg-gray-300');
+    });
+
+    deliveryTab.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deliveryContent.classList.remove('hidden');
+      paymentContent.classList.add('hidden');
+      deliveryTab.classList.add('bg-gray-300');
+      paymentTab.classList.remove('bg-gray-300');
+    });
+
+    const makeOfferBtn = itemElement.querySelector('.make-offer');
+    const chatBtn = itemElement.querySelector('.chat');
+    const shareBtn = itemElement.querySelector('.share');
+
+    [makeOfferBtn, chatBtn, shareBtn].forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    });
+
+    makeOfferBtn.addEventListener('click', () => {
+      showNotification(`Making an offer on ${item.name}`);
+    });
+
+    chatBtn.addEventListener('click', () => {
+      showNotification(`Starting chat about ${item.name}`);
+    });
+
+    shareBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(`Check out this item: ${item.name}`);
+      showNotification('Item link copied to clipboard');
+    });
+  };
+
+  // Initialize the component
+  setupCarousel();
+  setupEventListeners();
+
+  return itemElement;
+}
+
+// Optional: Enhance existing fetchItems to add more functionality
+const enhancedFetchItems = async (searchQuery = '') => {
+  try {
+    // Call the original fetchItems function
+    await fetchItems(searchQuery);
+    
+    // Additional post-fetch interactions or processing
+    const items = document.getElementById('postedItems').children;
+    
+    // Example: Add hover effects or additional interactions
+    Array.from(items).forEach(item => {
+      item.addEventListener('mouseenter', () => {
+        item.classList.add('transform', 'scale-105', 'transition-transform');
+      });
+      
+      item.addEventListener('mouseleave', () => {
+        item.classList.remove('transform', 'scale-105', 'transition-transform');
+      });
+    });
+  } catch (error) {
+    console.error('Enhanced fetch error:', error);
+  }
+};
+
+// Optional: Replace original fetchItems if desired
+// window.fetchItems = enhancedFetchItems;
+      
+  
 
   // Configuration
 const CONFIG = {
-  API_BASE_URL: 'https://thrift-backend-rose.vercel.app/api',
+  API_BASE_URL: 'https://afrimart-zbj3.onrender.com/api',
   UPLOAD_SETTINGS: {
     MAX_FILES: 8,
     MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
@@ -118,7 +557,7 @@ const formatFileSize = (bytes) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
-
+/**
 const showNotification = (() => {
   let currentTimeout;
   return (message, type = 'error') => {
@@ -140,7 +579,7 @@ const showNotification = (() => {
       }, 300);
     }, 3000);
   };
-})();
+})();**/
 
 const validateFiles = (files) => {
   if (!files || files.length === 0) {
@@ -167,7 +606,7 @@ const validateFiles = (files) => {
     }
   }
 };
-
+/**
 // UI Functions
 const createLoadingSkeleton = () => {
   return `
@@ -232,7 +671,7 @@ const createItemElement = (item) => {
   `;
 
   return itemDiv;
-};
+};**/
 
 // Image Preview Handling
 const handleImagePreview = (() => {
@@ -295,7 +734,7 @@ const handleImagePreview = (() => {
     }
   };
 })();
-
+/**
 // API Functions
 const fetchItems = async (searchQuery = '') => {
   const container = document.getElementById('postedItems');
@@ -342,7 +781,7 @@ const fetchItems = async (searchQuery = '') => {
     `;
     lucide.createIcons();
   }
-};
+};**/
 
 const uploadItem = async (formData) => {
   const token = getAuthToken();
@@ -392,7 +831,16 @@ const handleFormSubmit = async (event) => {
     validateFiles(files);
 
     // Prepare form data
+    //const formData = new FormData(form);
     const formData = new FormData(form);
+
+// Ensure the fields are included in the FormData
+formData.append('name', document.getElementById('name').value);
+formData.append('price', document.getElementById('price').value);
+formData.append('description', document.getElementById('description').value);
+formData.append('currency', document.getElementById('currency').value);
+formData.append('category', document.getElementById('category').value);
+formData.append('location', document.getElementById('location').value);
 
     // Update UI
     submitButton.disabled = true;
