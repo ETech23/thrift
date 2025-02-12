@@ -1,43 +1,473 @@
-<!-- profile.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="styles.css" rel="stylesheet">
-</head>
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+     <!-- Include Lucide Icons -->
+  <!-- Development version -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
-<body>
-    <div class="container">
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-12 col-md-6">
-                <div class="card p-4">
-                    <h2 class="text-center">Edit Profile</h2>
-                    <form id="profileForm">
-                        <div class="mb-3">
-                            <label for="profileName" class="form-label">Full Name</label>
-                            <input type="text" id="profileName" class="form-control" placeholder="Enter your name">
-                        </div>
-                        <div class="mb-3">
-                            <label for="profileEmail" class="form-label">Email</label>
-                            <input type="email" id="profileEmail" class="form-control" placeholder="Enter your email">
-                        </div>
-                        <div class="mb-3">
-                            <label for="profilePassword" class="form-label">New Password</label>
-                            <input type="password" id="profilePassword" class="form-control" placeholder="Enter a new password">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Save Changes</button>
-                    </form>
+<!-- Production version -->
+<script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    
+    <div class="container mx-auto px-0 py-1">
+        
+        <!-- Profile Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <div class="w-24 h-24 rounded-full overflow-hidden">
+                        <img id="profileImage" src="https://via.placeholder.com/150" alt="Profile" class="w-full h-full object-cover">
+                    </div>
+                    <button id="changePhotoBtn" class="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
+                        <i data-lucide="camera" class="w-4 h-4"></i>
+                    </button>
+                    <input type="file" id="photoInput" class="hidden" accept="image/*">
                 </div>
+                <div>
+                    <h2 id="userName" class="text-2xl font-bold"></h2>
+                    <p id="userEmail" class="text-gray-600"></p>
+                    <a href="">
+                        
+                  <p id="editProfile" class="text-gray-600 flex items-center cursor-pointer">
+  <i class="fas fa-edit text-blue-500 mr-2"></i> 
+</p> </a>
+                </div>
+
+            </div>
+        </div>
+<div class="container mx-auto px-4 py-8">
+        
+
+        <!-- Posted Items Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">My Posted Items</h3>
+                <div id="notification" class="hidden fixed top-4 right-4 p-4 rounded-lg text-white"></div>
+            </div>
+
+            <!-- Items Grid -->
+            <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Items will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Edit Item Modal -->
+        <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">Edit Item</h3>
+                    <button class="close-modal">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <form id="editItemForm" class="space-y-4">
+                    <input type="hidden" id="editItemId">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Title</label>
+                        <input type="text" id="editTitle" class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Description</label>
+                        <textarea id="editDescription" class="w-full p-2 border rounded"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Price</label>
+                        <input type="number" id="editPrice" class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Images</label>
+                        <input type="file" id="editImages" multiple accept="image/*" class="w-full p-2 border rounded">
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" class="close-modal px-4 py-2 border rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">Save Changes</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+<div class="container mx-auto px-0 py-1"></div>
+        <script src="script.js"></script>
+    <script>
+        const token = localStorage.getItem("token");
 
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script src="script.js"></script>
+if (!token) {
+    alert("Please log in to access your profile.");
+    window.location.href = "login.html"; // Use '=' instead of '()'
+}
+        const BASE_URL = "https://afrimart-zbj3.onrender.com/api";
+        
+        const debug = {
+            log: function(message, data = null) {
+                const timestamp = new Date().toISOString();
+                const logMessage = `[${timestamp}] ${message}`;
+                console.log(logMessage, data);
+                
+                const debugInfo = document.getElementById('debugInfo');
+                const debugPanel = document.getElementById('debugPanel');
+                
+                if (debugInfo && debugPanel) {
+                    debugPanel.classList.remove('hidden');
+                    debugInfo.textContent += logMessage + 
+                        (data ? '\n' + JSON.stringify(data, null, 2) : '') + '\n\n';
+                }
+            },
+            error: function(message, error) {
+                const timestamp = new Date().toISOString();
+                const logMessage = `[${timestamp}] ERROR: ${message}`;
+                console.error(logMessage, error);
+                
+                const debugInfo = document.getElementById('debugInfo');
+                const debugPanel = document.getElementById('debugPanel');
+                
+                if (debugInfo && debugPanel) {
+                    debugPanel.classList.remove('hidden');
+                    debugInfo.textContent += logMessage + '\n' + 
+                        (error.stack || error.message || JSON.stringify(error)) + '\n\n';
+                }
+            }
+        };
+        
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Global variables
+        let currentUser = null;
+        let userItems = [];
+        
+// Core dashboard functionality
+const DashboardManager = {
+    BASE_URL: 'https://afrimart-zbj3.onrender.com/api',
+    currentUser: null,
+    userItems: [],
+    
+    // Initialize the dashboard
+    async init() {
+        try {
+            await this.fetchUserData();
+            await this.fetchUserItems();
+            this.setupEventListeners();
+            this.setupImageUpload();
+        } catch (error) {
+            console.error('Dashboard initialization failed:', error);
+            this.showNotification('Failed to initialize dashboard', 'error');
+        }
+    },
+
+    // Authentication helper
+    getAuthHeaders() {
+        const token = localStorage.getItem('token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+    },
+
+    // Fetch user profile data
+    async fetchUserData() {
+        try {
+            const response = await fetch(`${this.BASE_URL}/users/profile`, {
+                headers: this.getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            this.currentUser = await response.json();
+            this.updateProfileUI();
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            this.showNotification('Failed to load profile data', 'error');
+            throw error;
+        }
+    },
+
+    // Fetch user's items
+    async fetchUserItems() {
+        try {
+            const response = await fetch(`${this.BASE_URL}/items`, {
+                headers: this.getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const items = await response.json();
+            this.userItems = items.filter(item => 
+                item.user && this.currentUser && item.user._id === this.currentUser._id
+            );
+            this.renderItems();
+        } catch (error) {
+            console.error('Error fetching items:', error);
+            this.showNotification('Failed to load items', 'error');
+            throw error;
+        }
+    },
+
+    // Update profile UI elements
+    updateProfileUI() {
+        if (!this.currentUser) return;
+        
+        document.getElementById('userName').textContent = this.currentUser.name || 'User';
+        document.getElementById('userEmail').textContent = this.currentUser.email || '';
+        
+        const profileImage = document.getElementById('profileImage');
+        if (profileImage && this.currentUser.avatar) {
+            profileImage.src = this.currentUser.avatar;
+        }
+    },
+
+    // Render items grid
+    renderItems() {
+        const itemsGrid = document.getElementById('itemsGrid');
+        if (!itemsGrid) return;
+
+        itemsGrid.innerHTML = this.userItems.map(item => `
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="relative h-48">
+                    <img src="${item.images?.[0] || 'https://via.placeholder.com/300'}" 
+                         alt="${this.escapeHtml(item.name)}" 
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="p-4">
+                    <h4 class="font-bold">${this.escapeHtml(item.name)}</h4>
+                    <p class="text-gray-600">${this.formatCurrency(item.price, item.currency)}</p>
+                    <p class="text-sm text-gray-500 mt-1">${this.escapeHtml(item.location || '')}</p>
+                    <div class="mt-4 flex justify-end space-x-2">
+                        <button onclick="DashboardManager.editItem('${item._id}')" 
+                                class="p-2 text-blue-500 hover:bg-blue-50 rounded">
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="DashboardManager.deleteItem('${item._id}')" 
+                                class="p-2 text-red-500 hover:bg-red-50 rounded">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Refresh Lucide icons
+        lucide.createIcons();
+    },
+
+    // Setup event listeners
+    setupEventListeners() {
+        // Edit form submission
+        const editForm = document.getElementById('editItemForm');
+        if (editForm) {
+            editForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.handleEditFormSubmit(e);
+            });
+        }
+
+        // Modal close buttons
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', () => {
+                document.getElementById('editModal').classList.add('hidden');
+            });
+        });
+    },
+
+    // Setup image upload functionality
+    setupImageUpload() {
+        const changePhotoBtn = document.getElementById('changePhotoBtn');
+        const photoInput = document.getElementById('photoInput');
+
+        if (changePhotoBtn && photoInput) {
+            changePhotoBtn.addEventListener('click', () => {
+                photoInput.click();
+            });
+
+            photoInput.addEventListener('change', async (e) => {
+                await this.handleProfilePhotoUpload(e);
+            });
+        }
+    },
+
+    // Handle profile photo upload
+    async handleProfilePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        try {
+            const response = await fetch(`${this.BASE_URL}/profile/avatar`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to upload profile photo');
+            }
+
+            this.currentUser = await response.json();
+            this.updateProfileUI();
+            this.showNotification('Profile photo updated successfully');
+        } catch (error) {
+            console.error('Profile photo upload error:', error);
+            this.showNotification('Failed to update profile photo', 'error');
+        }
+    },
+
+    // Handle edit form submission
+    async handleEditFormSubmit(event) {
+        const itemId = document.getElementById('editItemId').value;
+        const formData = new FormData();
+        
+        // Append form data
+        formData.append('name', document.getElementById('editTitle').value);
+        formData.append('description', document.getElementById('editDescription').value);
+        formData.append('price', document.getElementById('editPrice').value);
+
+        const imageFiles = document.getElementById('editImages').files;
+        for (let i = 0; i < imageFiles.length; i++) {
+            formData.append('images', imageFiles[i]);
+        }
+
+        try {
+            const response = await fetch(`${this.BASE_URL}/items/${itemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update item');
+            }
+
+            const updatedItem = await response.json();
+            this.userItems = this.userItems.map(item => 
+                item._id === itemId ? updatedItem : item
+            );
+            
+            this.renderItems();
+            document.getElementById('editModal').classList.add('hidden');
+            this.showNotification('Item updated successfully');
+        } catch (error) {
+            console.error('Update item error:', error);
+            this.showNotification('Failed to update item', 'error');
+        }
+    },
+
+    // Edit item
+    editItem(itemId) {
+        const item = this.userItems.find(i => i._id === itemId);
+        if (!item) return;
+
+        document.getElementById('editItemId').value = itemId;
+        document.getElementById('editTitle').value = item.name || '';
+        document.getElementById('editDescription').value = item.description || '';
+        document.getElementById('editPrice').value = item.price || '';
+        document.getElementById('editModal').classList.remove('hidden');
+    },
+
+    // Delete item
+    async deleteItem(itemId) {
+        if (!confirm('Are you sure you want to delete this item?')) return;
+
+        try {
+            const response = await fetch(`${this.BASE_URL}/items/${itemId}`, {
+                method: 'DELETE',
+                headers: this.getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete item');
+            }
+
+            this.userItems = this.userItems.filter(item => item._id !== itemId);
+            this.renderItems();
+            this.showNotification('Item deleted successfully');
+        } catch (error) {
+            console.error('Delete item error:', error);
+            this.showNotification('Failed to delete item', 'error');
+        }
+    },
+
+    // Utility: Format currency
+    formatCurrency(price, currency = 'USD') {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(price);
+    },
+
+    // Utility: Show notification
+    showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        if (!notification) return;
+
+        notification.textContent = message;
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        notification.classList.remove('hidden');
+        
+        setTimeout(() => {
+            notification.classList.add('hidden');
+        }, 3000);
+    },
+
+    // Utility: Escape HTML to prevent XSS
+    escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+};
+
+// Initialize dashboard when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    DashboardManager.init();
+});
+    </script>
+        <div class="footer-nav">
+    <a href="index.html" class="nav-item">
+        <i class="fas fa-home"></i><span>Home</span>
+    </a>
+               
+                 <!-- Post Item as a link in the navigation -->
+    <button id="uploadButton" class="nav-item">
+        <i class="fas fa-plus"></i><span>Post Item</span>
+    </button>
+    <a href="categories.html" class="nav-item">
+        <i class="fas fa-th-list"></i><span>Categories</span>
+    </a>
+    
+  
+
+    
+    <a href="orders.html" class="nav-item">
+        <i class="fas fa-box"></i><span>Orders</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+        <i class="fas fa-user"></i><span>Profile</span>
+    </a>
+</div>
 </body>
-
 </html>

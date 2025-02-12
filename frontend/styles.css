@@ -32,6 +32,17 @@
 .nav-item i {
     font-size: 20px;
 }
+#editProfile:hover {
+  color: #2563eb; /* Change text color on hover */
+}
+
+#editProfile i {
+  transition: transform 0.2s ease-in-out;
+}
+
+#editProfile:hover i {
+  transform: scale(1.2);
+}
 
 /* Post Item Button Styling */
 .post-item-btn {
