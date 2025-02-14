@@ -45,7 +45,64 @@
         </div>
 <div class="container mx-auto px-4 py-8">
         
+    <!-- Upload Form (Hidden by Default) -->
+    <div id="uploadFormContainer" class="bg-white shadow-lg rounded-lg p-6 mb-6 hidden">
+      <!-- Add Close Button Inside the Form -->
+<div class="flex justify-between items-center mb-4">
+    <h2 class="text-3xl font-semibold">Upload Item</h2>
+    <button type="button" id="closeForm" class="text-red-600 hover:text-red-800 text-2xl font-bold p-2">&times;</button>
+</div>
+       <form id="uploadForm" class="space-y-4">
+  <input type="text" id="name" placeholder="Item Name" class="w-full p-2 border rounded-lg" required>
+  <div class="flex space-x-4">
+    <input type="number" id="price" placeholder="Price" class="w-full p-2 border rounded-lg" required step="0.01">
+    <select id="currency" class="w-1/3 p-2 border rounded-lg" required>
+        <option value="">Select Currency</option>
+      <option value="NGN">₦ NGN (Nigerian Naira)</option>
+      <option value="USD">$ USD (US Dollar)</option>
+      <option value="GBP">£ GBP (British Pound)</option>
+      <option value="KES">KSh KES (Kenyan Shilling)</option>
+      <option value="GHS">₵ GHS (Ghanaian Cedi)</option>
+      <option value="ZAR">R ZAR (South African Rand)</option>
+      <option value="XAF">FCFA XAF (Central African CFA Franc)</option>
+      <option value="XOF">CFA XOF (West African CFA Franc)</option>
+      <option value="ETB">Br ETB (Ethiopian Birr)</option>
+      <option value="EGP">£ EGP (Egyptian Pound)</option>
+    </select>
+  </div>
+  <textarea id="description" placeholder="Item Description" class="w-full h-48 p-2 border rounded-lg" required></textarea>
+  <input type="text" id="location" placeholder="Location" class="w-full p-2 border rounded-lg" required>
+  <select id="category" class="w-full p-2 border rounded-lg" required>
+    <option value="">Select Category</option>
+      <option value="Laptops & Accessories">Laptops & Accessories</option>
+          <option value="Phones & Accessories">Phones & Accessories</option>
+    <option value="Electronics">Electronics</option>
+    <option value="Fashion">Fashion</option>
+    <option value="Home & Garden">Home & Garden</option>
+    <option value="Vehicles">Vehicles</option>
+    <option value="Real Estate">Real Estate</option>
+    <option value="Health & Beauty">Health & Beauty</option>
+    <option value="Sports & Fitness">Sports & Fitness</option>
+    <option value="Books & Stationery">Books & Stationery</option>
+    <option value="Food & Groceries">Food & Groceries</option>
+    <option value="Others">Others</option>
+  </select>
+  <div class="space-y-2">
+    <label for="media" class="block text-sm font-medium text-gray-700">Upload Images (Max 8)</label>
+    <input type="file" id="images" name="media" accept="image/*" class="w-full p-2 border rounded-lg" multiple max="3" required>
+    <div id="imagePreview" class="flex space-x-2"></div>
+  </div>
+  <button type="submit" class="w-full bg-green-600 text-white p-2 rounded-lg hover:bg-green-700">Upload</button>
+           
+</form>
 
+
+
+      <!-- Error Message -->
+      <div id="uploadError" class="text-red-500 mt-2 hidden"></div>
+      
+      <div id="notification" class="text-red-500 mt-2 hidden"></div>
+    </div>
         <!-- Posted Items Section -->
         <div class="bg-white rounded-lg shadow-lg p-6">
             <div class="flex justify-between items-center mb-6">
@@ -95,8 +152,7 @@
         </div>
     </div>
 <div class="container mx-auto px-0 py-1"></div>
-        <script src="script.js"></script>
-    <script>
+        <script>
         const token = localStorage.getItem("token");
 
 if (!token) {
@@ -446,15 +502,16 @@ document.addEventListener('DOMContentLoaded', () => {
     DashboardManager.init();
 });
     </script>
+        <script src="script.js"></script>
         <div class="footer-nav">
     <a href="index.html" class="nav-item">
         <i class="fas fa-home"></i><span>Home</span>
     </a>
                
-                 <!-- Post Item as a link in the navigation -->
+      <!-- Post Item as a link in the navigation -->
     <button id="uploadButton" class="nav-item">
         <i class="fas fa-plus"></i><span>Post Item</span>
-    </button>
+    </button>           
     <a href="categories.html" class="nav-item">
         <i class="fas fa-th-list"></i><span>Categories</span>
     </a>
@@ -469,5 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <i class="fas fa-user"></i><span>Profile</span>
     </a>
 </div>
+        <script src="upload.js"></script>
+        
 </body>
 </html>

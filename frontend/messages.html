@@ -10,32 +10,32 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="light-mode">
- <div id="overlay" class="overlay"></div>
+    <div id="overlay" class="overlay"></div>
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-md">
         <div class="container">
-            <a class="navbar-brand font-bold text-xl text-primary" href="index.html">Marketplace</a>
+            <a class="navbar-brand font-bold text-xl text-primary" href="index.html">Polymart</a>
             <button id="menuToggle" class="navbar-toggler border-0">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div id="mobileMenu" class="mobile-menu">
-    <ul class="list-unstyled p-5">
-        <li class="my-2"><a href="dashboard.html" class="w-100">Dashboard</a></li>
-        <hr>
-        <li class="my-2"><a href="listings.html" class="nav-link">Browse Listings</a></li>
-        <hr>
-        <li class="my-2"><a href="post-item.html" class="nav-link">Sell Items</a></li>
-        <hr>
-        <li class="my-2"><a href="profile.html" class="w-100">Profile</a></li>
-        <hr>
-        <li class="my-2" data-auth-links>
-    <!-- This content will be replaced by JavaScript -->
-    <a href="login.html" class="w-100">Sign In</a>
-</li>
-        <hr>
-        <li><button id="darkModeToggle" class="btn btn-secondary w-100 mt-2">Dark Mode</button></li>
-    </ul>
-</div>
+                <ul class="list-unstyled p-5">
+                    <li class="my-2"><a href="profile.html" class="w-100">Profile</a></li>
+                    <hr>
+                    <li class="my-2"><a href="listings.html" class="nav-link">Browse Listings</a></li>
+                    <hr>
+                    <li class="my-2"><a href="post-item.html" class="nav-link">Sell Items</a></li>
+                    <hr>
+                    <li class="my-2"><a href="profile.html" class="w-100">Profile</a></li>
+                    <hr>
+                    <li class="my-2" data-auth-links>
+                        <a href="login.html" class="w-100">Sign In</a>
+                    </li>
+                    <hr>
+                    <li><button id="darkModeToggle" class="btn btn-secondary w-100 mt-2">Dark Mode</button></li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -45,29 +45,60 @@
 
         <div class="chat-box">
             <div id="chatMessages" class="chat-messages">
-
-                
                 <!-- Messages will load here dynamically -->
             </div>
 
             <div class="chat-input">
-                                <p id="typingIndicator"></p>
+                <p id="typingIndicator"></p>
                 <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
                 <button id="recordButton">🎤</button>
                 <button id="sendMessage" class="btn btn-primary">Send</button>
             </div>
         </div>
     </section>
-    
-    <script>
-    const token = localStorage.getItem("token");
 
-if (!token) {
-  window.location.href = "index.html"; 
-}
-    </script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io("https://afrimart-zbj3.onrender.com/api");
+        const userId = localStorage.getItem("userId");
+        const receiverId = localStorage.getItem("chatUserId");
+
+        document.getElementById("sendMessage").addEventListener("click", () => {
+            const message = document.getElementById("messageInput").value;
+            if (message.trim() === "") return; // Prevent empty messages
+
+            // Send real-time message via WebSocket
+            socket.emit("sendMessage", { senderId: userId, receiverId, message });
+
+            // Save message in database
+            fetch("https://afrimart-zbj3.onrender.com/api/chats/send-message", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify({ receiverId, message }),
+            });
+
+            // Display the message instantly on sender's screen
+            document.getElementById("chatMessages").innerHTML += `
+                <div class="message sent">
+                    <strong>You:</strong> ${message}
+                </div>`;
+            document.getElementById("messageInput").value = "";
+        });
+
+        // Listen for new messages
+        socket.on("newMessage", ({ senderId, message }) => {
+            const sender = senderId === userId ? "You" : "Seller";
+            document.getElementById("chatMessages").innerHTML += `
+                <div class="message ${senderId === userId ? 'sent' : 'received'}">
+                    <strong>${sender}:</strong> ${message}
+                </div>`;
+        });
+    </script>
+
+    
     <script src="script.js"></script>
 </body>
 </html>

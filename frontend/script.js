@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const BASE_URL = "https://afrimart-zbj3.onrender.com/api";
-    const socket = io(BASE_URL);
+   // const socket = io("https://afrimart-zbj3.onrender.com");
 
     // Dark Mode Management
     function setupDarkMode() {
@@ -16,7 +16,67 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     }
+    
+// Ensure socket.io is loaded first
+const socket = io("https://afrimart-zbj3.onrender.com");
 
+// Notify the server when the user logs in
+const userId = localStorage.getItem("userId");
+if (userId) {
+  socket.emit("userConnected", userId);
+}
+/**
+// Handle "Make Offer" button clicks
+document.addEventListener("click", async function (event) {
+  if (event.target.classList.contains("make-offer")) {
+      console.log("Make offer button clicked");
+    const itemId = event.target.closest(".bg-white").getAttribute("data-item-id");
+    const sellerId = event.target.closest(".bg-white").getAttribute("data-seller-id");
+
+    if (!itemId || !sellerId) {
+      alert("Invalid item or seller ID.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please log in first!");
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://afrimart-zbj3.onrender.com/api/items/make-offer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ itemId, sellerId })
+      });
+
+      if (!response.ok) throw new Error("Failed to make an offer");
+
+      // Emit offer event to the seller
+      socket.emit("makeOffer", { sellerId, buyerId: userId, itemId });
+
+      alert("Offer sent successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Error sending offer");
+    }
+  }
+});
+
+// Listen for offer notifications
+socket.on("offerNotification", ({ buyerId, itemId }) => {
+  alert(`New offer on item ${itemId} from user ${buyerId}`);
+});
+
+// Listen for chat messages
+socket.on("newMessage", ({ senderId, message }) => {
+  alert(`New message from ${senderId}: ${message}`);
+});
+    **/
     // Mobile Menu Toggle
     function setupMobileMenu() {
         const menuToggle = document.getElementById("menuToggle");
