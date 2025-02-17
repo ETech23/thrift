@@ -24,10 +24,9 @@
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-md">
-        <div class="container">
-           <a class="navbar-brand font-bold text-xl  px-4 py-2 rounded" href="#" style="color: #2C5530;">Polymart</a>
-            
-            <p id="darkModeToggle" class="btn   mt-2">🔅</p>
+        <div class="container ">
+           <a class="navbar-brand font-bold text-xl  px-4 py-2 rounded" href="#" style="color: #2C5530;">Masto</a>
+  <p id="darkModeToggle" class="btn   mt-2">🔅</p>
             
             <!-- Upload Button -->
     
@@ -117,7 +116,7 @@
       <option value="Phones & Accessories">Phones and Accessories</option>
     <option value="Fashion">Fashion</option>
     <option value="Home & Garden">Home & Garden</option>
-    <option value="Vehicles">Vehicles</option>
+    <option value="Vehicle | car | motor">Vehicles</option>
     <option value="Real Estate">Real Estate</option>
     <option value="Health & Beauty">Health & Beauty</option>
     <option value="Sports & Fitness">Sports & Fitness</option>
@@ -387,7 +386,7 @@ function createItemElement(item) {
           </div>
 
           <div class="payment-content space-y-1">
-            ${['Cash on Delivery', 'Bank Transfer', 'USSD Transfer', 'Paystack', 'Flutterwave']
+            ${['Cash on Delivery', 'Bank Transfer']
               .map(method => `
                 <button class="w-full p-2 text-sm border rounded-lg text-left flex items-center justify-between hover:bg-gray-50">
                   <span class="flex items-center">
@@ -404,8 +403,8 @@ function createItemElement(item) {
           <div class="delivery-content hidden space-y-1">
             ${[
               { name: 'Pickup', price: '0', icon: '🏪' },
-              { name: 'Standard Delivery', price: '2000', icon: '🚛' },
-              { name: 'Express Delivery', price: '5000', icon: '🚚' }
+              { name: 'Standard Delivery', price: '---', icon: '🚛' },
+              { name: 'Express Delivery', price: '---', icon: '🚚' }
             ].map(option => `
                 <button class="w-full p-2 text-sm border rounded-lg text-left flex items-center justify-between hover:bg-gray-50">
                   <span class="flex items-center">
@@ -876,7 +875,7 @@ if (userId) {
 }
 
 // Handle "Make Offer" button click
-   document.addEventListener("click", async function (event) {
+document.addEventListener("click", async function (event) {
   if (event.target.classList.contains("make-offer")) {
     console.log("🔨 Make offer button clicked");
 
@@ -898,24 +897,99 @@ if (userId) {
       return;
     }
 
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-      console.error("❌ Failed to retrieve user ID from localStorage.");
-      alert("Failed to retrieve user ID.");
+    console.log(`🧑‍💼 Buyer ID: ${userId}`);
+
+    // Prompt the buyer to enter an offer price
+    const price = prompt("Enter your offer price:");
+    if (!price || isNaN(price) || price <= 0) {
+      alert("Please enter a valid offer price.");
       return;
     }
 
-    console.log(`🧑‍💼 Buyer ID: ${userId}`);
-
     try {
       console.log("📝 Sending make offer request to backend...");
-      const response = await fetch("https://afrimart-zbj3.onrender.com/api/items/make-offer", {
+      const response = await fetch("https://afrimart-zbj3.onrender.com/api/orders/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ itemId, buyerId: userId }) // Send itemId and buyerId (userId)
+        body: JSON.stringify({ itemId, price }) // ✅ Correct parameters
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("❌ Failed to make an offer:", data.error || "Unknown error");
+        alert(data.error || "Failed to make an offer");
+        return;
+      }
+
+      // ✅ Check if order already exists and redirect
+      if (data.success === false && data.redirect) {
+        console.warn("⚠️ Order already exists, redirecting...");
+        alert("You have already placed an order for this item. Redirecting to chat...");
+        window.location.href = data.redirect;
+        return;
+      }
+
+      console.log("✅ Offer sent successfully!", data);
+
+      // Emit offer event to the seller via Socket.io (pass sellerId, buyerId, itemId)
+      socket.emit("makeOffer", { sellerId: data.order.seller, buyerId: userId, itemId });
+
+      alert("Offer sent successfully!");
+
+      // ✅ Redirect to order page with order ID and item ID
+      window.location.href = `order.html?orderId=${data.order._id}&itemId=${itemId}`;
+    } catch (error) {
+      console.error("❌ Error while making offer:", error);
+      alert("Error sending offer");
+    }
+  }
+});
+ 
+ 
+  /**         document.addEventListener("click", async function (event) {
+  if (event.target.classList.contains("make-offer")) {
+    console.log("🔨 Make offer button clicked");
+
+    // Get the itemId from the button's data-item-id
+    const itemId = event.target.getAttribute("data-item-id");
+    console.log(`🛒 Item ID: ${itemId}`);
+
+    if (!itemId) {
+      console.error("❌ Invalid item ID.");
+      alert("Invalid item ID.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ No token found. User is not logged in.");
+      alert("Please log in first!");
+      window.location.href = "login.html"; // Redirect to login page if not logged in
+      return;
+    }
+
+    console.log(`🧑‍💼 Buyer ID: ${userId}`);
+
+    // Prompt the buyer to enter an offer price
+    const price = prompt("Enter your offer price:");
+    if (!price || isNaN(price) || price <= 0) {
+      alert("Please enter a valid offer price.");
+      return;
+    }
+
+    try {
+      console.log("📝 Sending make offer request to backend...");
+      const response = await fetch("https://afrimart-zbj3.onrender.com/api/orders/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ itemId, price }) // ✅ Correct parameters
       });
 
       const data = await response.json();
@@ -929,16 +1003,19 @@ if (userId) {
       console.log("✅ Offer sent successfully!", data);
 
       // Emit offer event to the seller via Socket.io (pass sellerId, buyerId, itemId)
-      socket.emit("makeOffer", { sellerId: data.sellerId, buyerId: userId, itemId });
+      socket.emit("makeOffer", { sellerId: data.order.seller, buyerId: userId, itemId });
 
       alert("Offer sent successfully!");
+
+      // ✅ Redirect to order page with order ID and item ID
+      window.location.href = `order.html?orderId=${data.order._id}&itemId=${itemId}`;
     } catch (error) {
       console.error("❌ Error while making offer:", error);
       alert("Error sending offer");
     }
   }
-});
-    
+});**/
+   
 
  
 // Listen for offer notifications
@@ -967,7 +1044,7 @@ socket.on("newMessage", ({ senderId, message }) => {
   
 
     
-    <a href="orders.html" class="nav-item">
+    <a href="order.html" class="nav-item">
         <i class="fas fa-box"></i><span>Orders</span>
     </a>
     <a href="profile.html" class="nav-item">

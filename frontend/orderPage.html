@@ -1,0 +1,71 @@
+<!-- public/order.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Details</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">
+    <h1 class="text-2xl font-semibold">Order Details</h1>
+    <div id="order-details" class="mt-4"></div>
+
+    <h2 class="text-xl font-semibold mt-6">Chat</h2>
+    <div id="chat-box" class="bg-gray-200 p-4 rounded-lg mt-4 h-64 overflow-y-scroll"></div>
+
+    <div class="flex mt-4">
+      <input type="text" id="message" class="w-full p-2 border border-gray-300 rounded" placeholder="Type a message...">
+      <button id="send-message" class="ml-2 p-2 bg-blue-500 text-white rounded">Send</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+  // public/order.js
+const socket = io();
+
+// Fetch order details and display chat
+const orderId = new URLSearchParams(window.location.search).get('orderId');
+
+axios.get(`https://afrimart-zbj3.onrender.com/api/orders/${orderId}`).then((response) => {
+  const order = response.data.order;
+  document.getElementById('order-details').innerHTML = `
+    <p><strong>Item:</strong> ${order.item.name}</p>
+    <p><strong>Price:</strong> $${order.price}</p>
+    <p><strong>Seller:</strong> ${order.seller.name}</p>
+    <p><strong>Buyer:</strong> ${order.buyer.name}</p>
+  `; 
+
+  order.messages.forEach((msg) => {
+    const messageElement = document.createElement('p');
+    messageElement.classList.add('my-2');
+    messageElement.textContent = `${msg.sender.name}: ${msg.message}`;
+    document.getElementById('chat-box').appendChild(messageElement);
+  });
+
+  // Set up real-time chat
+  socket.on('newMessage', (data) => {
+    const messageElement = document.createElement('p');
+    messageElement.classList.add('my-2');
+    messageElement.textContent = `${data.senderName}: ${data.message}`;
+    document.getElementById('chat-box').appendChild(messageElement);
+  });
+
+  // Send new message
+  document.getElementById('send-message').addEventListener('click', () => {
+    const message = document.getElementById('message').value;
+    if (message) {
+      axios.post(`https://afrimart-zbj3.onrender.com/api/orders/${orderId}/message`, { message }).then(() => {
+        socket.emit('sendMessage', { orderId, message });
+        document.getElementById('message').value = '';
+      });
+    }
+  });
+});
+</script>
+</body>
+</html>
